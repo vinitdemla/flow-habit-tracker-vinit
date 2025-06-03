@@ -18,54 +18,54 @@ import {
   Bar, 
   XAxis, 
   YAxis, 
-  ResponsiveContainer, 
   LineChart, 
   Line 
 } from 'recharts';
 
 const Analytics = () => {
   const weeklyData = [
-    { day: 'Sun', value: 0 },
-    { day: 'Mon', value: 0 },
-    { day: 'Tue', value: 1 },
-    { day: 'Wed', value: 0 },
-    { day: 'Thu', value: 0 },
-    { day: 'Fri', value: 0 },
-    { day: 'Sat', value: 0 },
+    { day: 'Sun', value: 0, completions: 0 },
+    { day: 'Mon', value: 0.8, completions: 4 },
+    { day: 'Tue', value: 1, completions: 5 },
+    { day: 'Wed', value: 0.6, completions: 3 },
+    { day: 'Thu', value: 0.4, completions: 2 },
+    { day: 'Fri', value: 0.2, completions: 1 },
+    { day: 'Sat', value: 0, completions: 0 },
   ];
 
   const completionRateData = [
-    { week: 'Week 1', rate: 0 },
-    { week: 'Week 2', rate: 5 },
-    { week: 'Week 3', rate: 8 },
-    { week: 'Week 4', rate: 12 },
-    { week: 'Week 5', rate: 15 },
-    { week: 'Week 6', rate: 18 },
+    { week: 'Week 1', rate: 20 },
+    { week: 'Week 2', rate: 35 },
+    { week: 'Week 3', rate: 45 },
+    { week: 'Week 4', rate: 60 },
+    { week: 'Week 5', rate: 75 },
+    { week: 'Week 6', rate: 80 },
   ];
 
   const timeOfDayData = [
-    { time: '1AM', rate: 0 },
-    { time: '3AM', rate: 0.95 },
-    { time: '5AM', rate: 0 },
-    { time: '7AM', rate: 0 },
-    { time: '9AM', rate: 0 },
-    { time: '11AM', rate: 0 },
-    { time: '1PM', rate: 0 },
-    { time: '3PM', rate: 0 },
-    { time: '5PM', rate: 0 },
-    { time: '7PM', rate: 0 },
-    { time: '9PM', rate: 0 },
-    { time: '11PM', rate: 0 },
+    { time: '6AM', rate: 25 },
+    { time: '8AM', rate: 40 },
+    { time: '10AM', rate: 60 },
+    { time: '12PM', rate: 45 },
+    { time: '2PM', rate: 30 },
+    { time: '4PM', rate: 35 },
+    { time: '6PM', rate: 55 },
+    { time: '8PM', rate: 70 },
+    { time: '10PM', rate: 20 },
   ];
 
   const chartConfig = {
     rate: {
-      label: 'Rate',
+      label: 'Success Rate (%)',
       color: '#3B82F6',
     },
     value: {
-      label: 'Value',
+      label: 'Completion Rate',
       color: '#3B82F6',
+    },
+    completions: {
+      label: 'Completions',
+      color: '#10B981',
     },
   };
 
@@ -91,7 +91,7 @@ const Analytics = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>Completion Rate</CardTitle>
+              <CardTitle>Completion Rate Trend</CardTitle>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-80">
@@ -106,15 +106,18 @@ const Analytics = () => {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                    domain={[0, 25]}
+                    domain={[0, 100]}
                     tickFormatter={(value) => `${value}%`}
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
+                    formatter={(value) => [`${value}%`, 'Success Rate']}
+                  />
                   <Line 
                     dataKey="rate" 
-                    stroke="#000000" 
-                    strokeWidth={2}
-                    dot={{ fill: '#000000', strokeWidth: 2, r: 4 }}
+                    stroke="#3B82F6" 
+                    strokeWidth={3}
+                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 5 }}
                     type="monotone"
                   />
                 </LineChart>
@@ -139,14 +142,17 @@ const Analytics = () => {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                    domain={[0, 1]}
-                    tickFormatter={(value) => value.toFixed(2)}
+                    domain={[0, 100]}
+                    tickFormatter={(value) => `${value}%`}
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
+                    formatter={(value) => [`${value}%`, 'Success Rate']}
+                  />
                   <Bar 
                     dataKey="rate" 
                     fill="#3B82F6" 
-                    radius={[2, 2, 0, 0]}
+                    radius={[4, 4, 0, 0]}
                     maxBarSize={40}
                   />
                 </BarChart>
@@ -157,7 +163,7 @@ const Analytics = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Weekly Progress</CardTitle>
+            <CardTitle>Weekly Progress Overview</CardTitle>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-80">
@@ -172,14 +178,20 @@ const Analytics = () => {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                  domain={[0, 1]}
-                  ticks={[0, 0.25, 0.5, 0.75, 1]}
+                  domain={[0, 'dataMax']}
+                  tickFormatter={(value) => Math.round(value)}
                 />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip 
+                  content={<ChartTooltipContent />}
+                  formatter={(value, name) => [
+                    Math.round(value as number), 
+                    name === 'completions' ? 'Completions' : 'Rate'
+                  ]}
+                />
                 <Bar 
-                  dataKey="value" 
-                  fill="#3B82F6" 
-                  radius={[2, 2, 0, 0]}
+                  dataKey="completions" 
+                  fill="#10B981" 
+                  radius={[4, 4, 0, 0]}
                   maxBarSize={60}
                 />
               </BarChart>

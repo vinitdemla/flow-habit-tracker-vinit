@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Header } from '@/components/Header';
 import { AddHabitDialog } from '@/components/AddHabitDialog';
+import { HeatmapModal } from '@/components/HeatmapModal';
 
 interface Habit {
   id: string;
@@ -35,6 +36,8 @@ const Dashboard = () => {
   ]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+  const [isHeatmapOpen, setIsHeatmapOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'all'>('pending');
 
   const addHabit = (newHabit: Omit<Habit, 'id' | 'streak' | 'completedToday' | 'totalDays' | 'completedDays'>) => {
@@ -57,19 +60,25 @@ const Dashboard = () => {
           ...habit,
           completedToday: newCompletedToday,
           completedDays: newCompletedToday ? habit.completedDays + 1 : Math.max(0, habit.completedDays - 1),
-          totalDays: habit.totalDays + (newCompletedToday ? 1 : 0),
-          streak: newCompletedToday ? habit.streak + 1 : Math.max(0, habit.streak - 1)
+          totalDays: Math.max(habit.totalDays, habit.completedDays + (newCompletedToday ? 1 : 0)),
+          streak: newCompletedToday ? habit.streak + 1 : 0
         };
       }
       return habit;
     }));
   };
 
+  const openHeatmap = (habit: Habit) => {
+    setSelectedHabit(habit);
+    setIsHeatmapOpen(true);
+  };
+
+  // Fixed calculations
   const completedToday = habits.filter(h => h.completedToday).length;
   const totalHabits = habits.length;
-  const completionRate = totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 14;
-  const currentStreak = Math.max(...habits.map(h => h.streak), 1);
-  const totalCheckIns = habits.reduce((sum, h) => sum + h.completedDays, 1);
+  const completionRate = totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 0;
+  const currentStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
+  const totalCheckIns = habits.reduce((sum, h) => sum + h.completedDays, 0);
 
   const pendingHabits = habits.filter(h => !h.completedToday);
   const completedHabits = habits.filter(h => h.completedToday);
@@ -117,7 +126,7 @@ const Dashboard = () => {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Completion Rate</p>
                   <p className="text-3xl font-bold">{completionRate}%</p>
-                  <p className="text-sm text-gray-500">Last 7 days average</p>
+                  <p className="text-sm text-gray-500">Today's completion rate</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-gray-400" />
               </div>
@@ -128,9 +137,9 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Streak</p>
+                  <p className="text-sm text-gray-600 mb-1">Best Streak</p>
                   <p className="text-3xl font-bold">{currentStreak} days</p>
-                  <p className="text-sm text-gray-500">Current streak</p>
+                  <p className="text-sm text-gray-500">Longest current streak</p>
                 </div>
                 <Trophy className="h-8 w-8 text-gray-400" />
               </div>
@@ -143,7 +152,7 @@ const Dashboard = () => {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Total Check-ins</p>
                   <p className="text-3xl font-bold">{totalCheckIns}</p>
-                  <p className="text-sm text-gray-500">All time check-ins</p>
+                  <p className="text-sm text-gray-500">All time completions</p>
                 </div>
                 <Calendar className="h-8 w-8 text-gray-400" />
               </div>
@@ -235,7 +244,11 @@ const Dashboard = () => {
                       {habit.completedToday && (
                         <Badge className="bg-green-600">Completed</Badge>
                       )}
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => openHeatmap(habit)}
+                      >
                         View Details
                       </Button>
                     </div>
@@ -251,6 +264,14 @@ const Dashboard = () => {
           onOpenChange={setIsAddDialogOpen}
           onAddHabit={addHabit}
         />
+
+        {selectedHabit && (
+          <HeatmapModal
+            open={isHeatmapOpen}
+            onOpenChange={setIsHeatmapOpen}
+            habit={selectedHabit}
+          />
+        )}
       </div>
     </div>
   );
