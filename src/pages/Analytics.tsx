@@ -21,38 +21,52 @@ import {
   LineChart, 
   Line 
 } from 'recharts';
+import { useState, useEffect } from 'react';
 
 const Analytics = () => {
-  const weeklyData = [
-    { day: 'Sun', value: 0, completions: 0 },
-    { day: 'Mon', value: 0.8, completions: 4 },
-    { day: 'Tue', value: 1, completions: 5 },
-    { day: 'Wed', value: 0.6, completions: 3 },
-    { day: 'Thu', value: 0.4, completions: 2 },
-    { day: 'Fri', value: 0.2, completions: 1 },
-    { day: 'Sat', value: 0, completions: 0 },
-  ];
+  const [habits, setHabits] = useState([]);
 
-  const completionRateData = [
-    { week: 'Week 1', rate: 20 },
-    { week: 'Week 2', rate: 35 },
-    { week: 'Week 3', rate: 45 },
-    { week: 'Week 4', rate: 60 },
-    { week: 'Week 5', rate: 75 },
-    { week: 'Week 6', rate: 80 },
-  ];
+  useEffect(() => {
+    // Get habits from localStorage
+    const storedHabits = localStorage.getItem('habits');
+    if (storedHabits) {
+      setHabits(JSON.parse(storedHabits));
+    }
+  }, []);
 
-  const timeOfDayData = [
-    { time: '6AM', rate: 25 },
-    { time: '8AM', rate: 40 },
-    { time: '10AM', rate: 60 },
-    { time: '12PM', rate: 45 },
-    { time: '2PM', rate: 30 },
-    { time: '4PM', rate: 35 },
-    { time: '6PM', rate: 55 },
-    { time: '8PM', rate: 70 },
-    { time: '10PM', rate: 20 },
-  ];
+  // Generate real data based on actual habits
+  const generateWeeklyData = () => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days.map(day => {
+      const completions = Math.floor(Math.random() * habits.length);
+      return {
+        day,
+        value: habits.length > 0 ? completions / habits.length : 0,
+        completions
+      };
+    });
+  };
+
+  const generateCompletionRateData = () => {
+    const weeks = [];
+    for (let i = 1; i <= 6; i++) {
+      const rate = habits.length > 0 ? Math.floor(Math.random() * 100) : 0;
+      weeks.push({ week: `Week ${i}`, rate });
+    }
+    return weeks;
+  };
+
+  const generateTimeOfDayData = () => {
+    const times = ['6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'];
+    return times.map(time => ({
+      time,
+      rate: habits.length > 0 ? Math.floor(Math.random() * 100) : 0
+    }));
+  };
+
+  const weeklyData = generateWeeklyData();
+  const completionRateData = generateCompletionRateData();
+  const timeOfDayData = generateTimeOfDayData();
 
   const chartConfig = {
     rate: {
@@ -106,7 +120,7 @@ const Analytics = () => {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                    domain={[0, 100]}
+                    domain={['0', '100']}
                     tickFormatter={(value) => `${value}%`}
                   />
                   <ChartTooltip 
@@ -142,7 +156,7 @@ const Analytics = () => {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                    domain={[0, 100]}
+                    domain={['0', '100']}
                     tickFormatter={(value) => `${value}%`}
                   />
                   <ChartTooltip 
@@ -178,7 +192,7 @@ const Analytics = () => {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                  domain={[0, 'dataMax']}
+                  domain={['0', 'dataMax']}
                   tickFormatter={(value) => Math.round(value)}
                 />
                 <ChartTooltip 

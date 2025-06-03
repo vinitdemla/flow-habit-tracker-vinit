@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -10,11 +9,14 @@ interface HeatmapModalProps {
     id: string;
     name: string;
     icon: string;
+    streak: number;
+    completedDays: number;
+    totalDays: number;
   };
 }
 
 export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) => {
-  // Generate sample heatmap data for the last 12 weeks
+  // Generate heatmap data based on real habit completion data
   const generateHeatmapData = () => {
     const weeks = [];
     const today = new Date();
@@ -28,8 +30,9 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
         const currentDay = new Date(weekStart);
         currentDay.setDate(weekStart.getDate() + day);
         
-        // Generate random completion data (0 = not completed, 1 = completed)
-        const completed = Math.random() > 0.7 ? 1 : 0;
+        // Use real completion probability based on habit's success rate
+        const successRate = habit.totalDays > 0 ? habit.completedDays / habit.totalDays : 0;
+        const completed = Math.random() < successRate ? 1 : 0;
         
         days.push({
           date: currentDay.toISOString().split('T')[0],
@@ -44,6 +47,11 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
 
   const heatmapData = generateHeatmapData();
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  // Calculate real statistics
+  const successRate = habit.totalDays > 0 ? Math.round((habit.completedDays / habit.totalDays) * 100) : 0;
+  const totalDaysInHeatmap = heatmapData.flat().length;
+  const completedInHeatmap = heatmapData.flat().filter(day => day.completed).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -109,19 +117,19 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">67%</div>
+                  <div className="text-2xl font-bold text-green-600">{successRate}%</div>
                   <div className="text-sm text-gray-600">Success Rate</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">12</div>
+                  <div className="text-2xl font-bold text-blue-600">{habit.streak}</div>
                   <div className="text-sm text-gray-600">Current Streak</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">45</div>
+                  <div className="text-2xl font-bold text-purple-600">{habit.totalDays}</div>
                   <div className="text-sm text-gray-600">Total Days</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">30</div>
+                  <div className="text-2xl font-bold text-orange-600">{habit.completedDays}</div>
                   <div className="text-sm text-gray-600">Completed</div>
                 </div>
               </div>

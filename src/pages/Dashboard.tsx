@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Target, TrendingUp, Calendar, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,27 +18,29 @@ interface Habit {
   totalDays: number;
   completedDays: number;
   icon: string;
+  frequency: string;
+  customDays?: string[];
 }
 
 const Dashboard = () => {
-  const [habits, setHabits] = useState<Habit[]>([
-    {
-      id: '1',
-      name: 'STOP MASTURBATION',
-      description: 'Build self-control and focus',
-      category: 'Health',
-      streak: 1,
-      completedToday: false,
-      totalDays: 14,
-      completedDays: 2,
-      icon: '💪'
-    }
-  ]);
-
+  const [habits, setHabits] = useState<Habit[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [isHeatmapOpen, setIsHeatmapOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'all'>('pending');
+
+  // Load habits from localStorage on component mount
+  useEffect(() => {
+    const storedHabits = localStorage.getItem('habits');
+    if (storedHabits) {
+      setHabits(JSON.parse(storedHabits));
+    }
+  }, []);
+
+  // Save habits to localStorage whenever habits change
+  useEffect(() => {
+    localStorage.setItem('habits', JSON.stringify(habits));
+  }, [habits]);
 
   const addHabit = (newHabit: Omit<Habit, 'id' | 'streak' | 'completedToday' | 'totalDays' | 'completedDays'>) => {
     const habit: Habit = {
@@ -46,7 +48,7 @@ const Dashboard = () => {
       id: Date.now().toString(),
       streak: 0,
       completedToday: false,
-      totalDays: 0,
+      totalDays: 1,
       completedDays: 0
     };
     setHabits(prev => [...prev, habit]);
@@ -56,11 +58,14 @@ const Dashboard = () => {
     setHabits(prev => prev.map(habit => {
       if (habit.id === habitId) {
         const newCompletedToday = !habit.completedToday;
+        const newCompletedDays = newCompletedToday ? habit.completedDays + 1 : Math.max(0, habit.completedDays - 1);
+        const newTotalDays = Math.max(habit.totalDays, newCompletedDays);
+        
         return {
           ...habit,
           completedToday: newCompletedToday,
-          completedDays: newCompletedToday ? habit.completedDays + 1 : Math.max(0, habit.completedDays - 1),
-          totalDays: Math.max(habit.totalDays, habit.completedDays + (newCompletedToday ? 1 : 0)),
+          completedDays: newCompletedDays,
+          totalDays: newTotalDays,
           streak: newCompletedToday ? habit.streak + 1 : 0
         };
       }
@@ -73,7 +78,7 @@ const Dashboard = () => {
     setIsHeatmapOpen(true);
   };
 
-  // Fixed calculations
+  // Calculate real statistics based on actual habit data
   const completedToday = habits.filter(h => h.completedToday).length;
   const totalHabits = habits.length;
   const completionRate = totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 0;
@@ -209,7 +214,9 @@ const Dashboard = () => {
         {/* Habits List */}
         {displayedHabits.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No habits found in this category</p>
+            <p className="text-gray-500">
+              {totalHabits === 0 ? 'No habits created yet. Click "Add New Habit" to get started!' : 'No habits found in this category'}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -228,7 +235,8 @@ const Dashboard = () => {
                             <Trophy className="h-4 w-4 mr-1" />
                             {habit.streak}
                           </span>
-                          <Badge variant="outline">daily</Badge>
+                          <Badge variant="outline">{habit.frequency}</Badge>
+                          <span>{habit.completedDays}/{habit.totalDays} completed</span>
                         </div>
                       </div>
                     </div>
