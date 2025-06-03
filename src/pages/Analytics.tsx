@@ -1,4 +1,3 @@
-
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -226,8 +225,8 @@ const Analytics = () => {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                  domain={['0', 'dataMax']}
-                  tickFormatter={(value) => Math.round(value)}
+                  domain={[0, 'dataMax']}
+                  tickFormatter={(value) => Math.round(value).toString()}
                 />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
