@@ -1,3 +1,4 @@
+
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,6 +40,15 @@ interface HabitCompletion {
 interface Habit {
   id: string;
   name: string;
+  description: string;
+  category: string;
+  streak: number;
+  completedToday: boolean;
+  totalDays: number;
+  completedDays: number;
+  icon: string;
+  frequency: string;
+  customDays?: string[];
   completions?: HabitCompletion[];
 }
 
@@ -151,7 +161,8 @@ const Analytics = () => {
   // Generate category distribution data
   const generateCategoryData = () => {
     const categories = habits.reduce((acc, habit) => {
-      acc[habit.category] = (acc[habit.category] || 0) + 1;
+      const category = habit.category || 'Uncategorized';
+      acc[category] = (acc[category] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
