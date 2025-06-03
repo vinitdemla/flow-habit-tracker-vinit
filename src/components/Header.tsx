@@ -23,7 +23,7 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">HabitRise</h1>
+            <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">HabitRise</h1>
           </div>
 
           {/* Desktop Navigation */}

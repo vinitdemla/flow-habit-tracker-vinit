@@ -58,9 +58,38 @@ const Analytics = () => {
   useEffect(() => {
     const storedHabits = localStorage.getItem('habits');
     if (storedHabits) {
-      setHabits(JSON.parse(storedHabits));
+      const parsedHabits = JSON.parse(storedHabits);
+      // Reset daily habits at midnight
+      const resetHabits = resetDailyHabitsAtMidnight(parsedHabits);
+      setHabits(resetHabits);
+      // Save the reset habits back to localStorage
+      localStorage.setItem('habits', JSON.stringify(resetHabits));
     }
   }, []);
+
+  // Function to reset daily habits at midnight
+  const resetDailyHabitsAtMidnight = (habits: Habit[]) => {
+    const today = new Date().toISOString().split('T')[0];
+    const lastResetDate = localStorage.getItem('lastResetDate');
+    
+    if (lastResetDate !== today) {
+      // It's a new day, reset daily habits
+      const resetHabits = habits.map(habit => {
+        if (habit.frequency === 'daily') {
+          return {
+            ...habit,
+            completedToday: false
+          };
+        }
+        return habit;
+      });
+      
+      localStorage.setItem('lastResetDate', today);
+      return resetHabits;
+    }
+    
+    return habits;
+  };
 
   // Generate 7-day average completion rate data
   const generateCompletionRateData = () => {
@@ -237,32 +266,32 @@ const Analytics = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 dark:bg-gray-800">
-            <TabsTrigger value="overview" className="dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Overview</TabsTrigger>
-            <TabsTrigger value="patterns" className="dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Patterns</TabsTrigger>
-            <TabsTrigger value="achievements" className="dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Achievements</TabsTrigger>
-            <TabsTrigger value="export" className="dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Export</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 dark:bg-gray-800">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Overview</TabsTrigger>
+            <TabsTrigger value="patterns" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Patterns</TabsTrigger>
+            <TabsTrigger value="achievements" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Achievements</TabsTrigger>
+            <TabsTrigger value="export" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Export</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle className="dark:text-gray-100">Completion Rate Trend</CardTitle>
+                  <CardTitle className="text-sm sm:text-base dark:text-gray-100">Completion Rate Trend</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-80">
+                  <ChartContainer config={chartConfig} className="h-60 sm:h-80">
                     <LineChart data={timeRange === 'monthly' ? monthlyData : completionRateData}>
                       <XAxis 
                         dataKey={timeRange === 'monthly' ? 'month' : 'week'}
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
                       />
                       <YAxis 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
                         domain={[0, timeRange === 'monthly' ? 'dataMax' : 100]}
                         tickFormatter={(value) => timeRange === 'monthly' ? value.toString() : `${value}%`}
                       />
@@ -281,17 +310,17 @@ const Analytics = () => {
 
               <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle className="dark:text-gray-100">Habit Categories</CardTitle>
+                  <CardTitle className="text-sm sm:text-base dark:text-gray-100">Habit Categories</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-80">
+                  <ChartContainer config={chartConfig} className="h-60 sm:h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={categoryData}
                           cx="50%"
                           cy="50%"
-                          outerRadius={80}
+                          outerRadius={60}
                           dataKey="value"
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         >
@@ -314,21 +343,21 @@ const Analytics = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle className="dark:text-gray-100">Completions by Time of Day</CardTitle>
+                  <CardTitle className="text-sm sm:text-base dark:text-gray-100">Completions by Time of Day</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-80">
+                  <ChartContainer config={chartConfig} className="h-60 sm:h-80">
                     <BarChart data={timeOfDayData}>
                       <XAxis 
                         dataKey="time" 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
                       />
                       <YAxis 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
                         domain={[0, 'dataMax']}
                         tickFormatter={(value) => Math.round(value).toString()}
                       />
@@ -346,21 +375,21 @@ const Analytics = () => {
 
               <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle className="dark:text-gray-100">Weekly Completion Pattern</CardTitle>
+                  <CardTitle className="text-sm sm:text-base dark:text-gray-100">Weekly Completion Pattern</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-80">
+                  <ChartContainer config={chartConfig} className="h-60 sm:h-80">
                     <BarChart data={weeklyData}>
                       <XAxis 
                         dataKey="day" 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
                       />
                       <YAxis 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
                         domain={[0, 'dataMax']}
                         tickFormatter={(value) => Math.round(value).toString()}
                       />
