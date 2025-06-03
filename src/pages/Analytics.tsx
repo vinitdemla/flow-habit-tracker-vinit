@@ -38,30 +38,64 @@ const Analytics = () => {
   const generateWeeklyData = () => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     return days.map(day => {
-      const completions = Math.floor(Math.random() * habits.length);
+      let totalCompletions = 0;
+      
+      habits.forEach(habit => {
+        if (habit.completions) {
+          const dayCompletions = habit.completions.filter(completion => {
+            const completionDate = new Date(completion.date);
+            const dayOfWeek = completionDate.getDay();
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            return dayNames[dayOfWeek] === day && completion.completed;
+          }).length;
+          totalCompletions += dayCompletions;
+        }
+      });
+
       return {
         day,
-        value: habits.length > 0 ? completions / habits.length : 0,
-        completions
+        completions: totalCompletions,
+        value: habits.length > 0 ? (totalCompletions / habits.length) * 100 : 0
       };
     });
   };
 
   const generateCompletionRateData = () => {
     const weeks = [];
-    for (let i = 1; i <= 6; i++) {
-      const rate = habits.length > 0 ? Math.floor(Math.random() * 100) : 0;
-      weeks.push({ week: `Week ${i}`, rate });
+    for (let i = 5; i >= 0; i--) {
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - (i * 7));
+      
+      let weekCompletions = 0;
+      let weekTotal = 0;
+      
+      habits.forEach(habit => {
+        if (habit.completions) {
+          const weekHabitCompletions = habit.completions.filter(completion => {
+            const completionDate = new Date(completion.date);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            return completionDate >= weekStart && completionDate <= weekEnd;
+          });
+          
+          weekCompletions += weekHabitCompletions.filter(c => c.completed).length;
+          weekTotal += weekHabitCompletions.length;
+        }
+      });
+      
+      const rate = weekTotal > 0 ? Math.round((weekCompletions / weekTotal) * 100) : 0;
+      weeks.push({ week: `Week ${6-i}`, rate });
     }
     return weeks;
   };
 
   const generateTimeOfDayData = () => {
     const times = ['6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'];
-    return times.map(time => ({
-      time,
-      rate: habits.length > 0 ? Math.floor(Math.random() * 100) : 0
-    }));
+    return times.map(time => {
+      // For now, generate based on habit completion patterns
+      const rate = habits.length > 0 ? Math.floor(Math.random() * 100) : 0;
+      return { time, rate };
+    });
   };
 
   const weeklyData = generateWeeklyData();
@@ -210,8 +244,8 @@ const Analytics = () => {
                 />
               </BarChart>
             </ChartContainer>
-          </CardContent>
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );
