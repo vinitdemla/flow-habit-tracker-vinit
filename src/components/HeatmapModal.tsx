@@ -1,7 +1,6 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -32,8 +31,9 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
     
     switch (timeRange) {
       case 'month':
-        startDate.setMonth(today.getMonth() - 1);
-        totalWeeks = 5;
+        // Start from the first day of current month
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        totalWeeks = Math.ceil((today.getDate() + startDate.getDay()) / 7) + 1;
         break;
       case '6months':
         startDate.setMonth(today.getMonth() - 6);
@@ -59,13 +59,17 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
           const dateStr = currentDate.toISOString().split('T')[0];
           const completion = habit.completions?.find(c => c.date === dateStr);
           const isCompleted = completion?.completed || false;
+          const isToday = dateStr === today.toISOString().split('T')[0];
+          const isCurrentMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
           
           weekData.push({
             date: dateStr,
             completed: isCompleted,
             dayOfMonth: currentDate.getDate(),
             month: currentDate.getMonth(),
-            isCurrentMonth: currentDate <= today
+            isCurrentMonth,
+            isToday,
+            dayName: currentDate.toLocaleDateString('en-US', { weekday: 'short' })
           });
         } else {
           weekData.push(null);
@@ -76,18 +80,23 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
     return weeks;
   };
 
-  const getIntensityLevel = (completed: boolean) => {
+  const getIntensityLevel = (completed: boolean, isToday: boolean) => {
+    if (isToday && !completed) return 1; // Light highlight for today
     if (!completed) return 0;
     return 4; // Full intensity for completed days
   };
 
-  const getHeatmapColor = (level: number) => {
+  const getHeatmapColor = (level: number, isToday: boolean) => {
+    if (isToday && level === 1) {
+      return 'bg-blue-200 dark:bg-blue-800 border-blue-400 dark:border-blue-600'; // Today's highlight
+    }
+    
     const colors = [
-      'bg-gray-100 dark:bg-gray-800', // 0 - no activity
-      'bg-green-100 dark:bg-green-900', // 1 - low
-      'bg-green-200 dark:bg-green-800', // 2 - medium-low  
-      'bg-green-400 dark:bg-green-700', // 3 - medium-high
-      'bg-green-600 dark:bg-green-600'  // 4 - high
+      'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-600', // 0 - no activity
+      'bg-green-100 dark:bg-green-900 border-gray-200 dark:border-gray-600', // 1 - low
+      'bg-green-200 dark:bg-green-800 border-gray-200 dark:border-gray-600', // 2 - medium-low  
+      'bg-green-400 dark:bg-green-700 border-gray-200 dark:border-gray-600', // 3 - medium-high
+      'bg-green-600 dark:bg-green-600 border-green-700 dark:border-green-500'  // 4 - high
     ];
     return colors[level];
   };
@@ -95,10 +104,26 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
   const HeatmapGrid = ({ timeRange }: { timeRange: 'month' | '6months' | 'year' }) => {
     const heatmapData = generateHeatmapData(timeRange);
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const today = new Date();
     
     return (
       <div className="space-y-4 sm:space-y-6">
-        {/* Month labels - responsive */}
+        {/* Current month/period indicator */}
+        <div className="text-center">
+          <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            {timeRange === 'month' ? 
+              `${months[today.getMonth()]} ${today.getFullYear()}` :
+              timeRange === '6months' ?
+              'Last 6 Months' :
+              'Last Year'
+            }
+          </h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Today: {today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+
+        {/* Month labels for longer periods */}
         {timeRange !== 'month' && (
           <div className="flex justify-start ml-6 sm:ml-8">
             <div className={`grid gap-0 text-xs text-gray-500 dark:text-gray-400 ${
@@ -117,13 +142,12 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
         <div className="flex gap-1 overflow-x-auto pb-2">
           {/* Day labels */}
           <div className="flex flex-col gap-1 mr-2 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
-            <div className="h-2 sm:h-3"></div>
-            <div className="h-2 sm:h-3 flex items-center">Mon</div>
-            <div className="h-2 sm:h-3"></div>
-            <div className="h-2 sm:h-3 flex items-center">Wed</div>
-            <div className="h-2 sm:h-3"></div>
-            <div className="h-2 sm:h-3 flex items-center">Fri</div>
-            <div className="h-2 sm:h-3"></div>
+            <div className="h-3 sm:h-4"></div>
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
+              <div key={day} className="h-3 sm:h-4 flex items-center">
+                {index % 2 === 0 ? day : ''}
+              </div>
+            ))}
           </div>
           
           {/* Heatmap cells */}
@@ -133,12 +157,15 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
                 {week.map((day, dayIndex) => (
                   <div
                     key={`${weekIndex}-${dayIndex}`}
-                    className={`w-2 h-2 sm:w-3 sm:h-3 rounded-sm border border-gray-200 dark:border-gray-600 cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-gray-400 dark:hover:ring-gray-300 hover:scale-110 ${
+                    className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm border cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-gray-400 dark:hover:ring-gray-300 hover:scale-110 ${
                       day 
-                        ? getHeatmapColor(getIntensityLevel(day.completed))
+                        ? getHeatmapColor(getIntensityLevel(day.completed, day.isToday), day.isToday)
                         : 'bg-transparent border-transparent'
                     }`}
-                    title={day ? `${day.date}: ${day.completed ? 'Completed' : 'Not completed'}` : ''}
+                    title={day ? 
+                      `${day.date}: ${day.completed ? 'Completed' : 'Not completed'}${day.isToday ? ' (Today)' : ''}` : 
+                      ''
+                    }
                   />
                 ))}
               </div>
@@ -154,6 +181,10 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
   const totalDays = habit.completions?.length || 0;
   const successRate = totalDays > 0 ? Math.round((totalCompletions / totalDays) * 100) : 0;
 
+  // Check if completed today
+  const today = new Date().toISOString().split('T')[0];
+  const completedToday = habit.completions?.some(c => c.date === today && c.completed) || false;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto animate-scale-in">
@@ -161,6 +192,11 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
           <DialogTitle className="flex items-center gap-2">
             <span className="text-xl sm:text-2xl">{habit.icon}</span>
             <span className="text-lg sm:text-xl">{habit.name} - Activity Heatmap</span>
+            {completedToday && (
+              <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full text-xs font-medium">
+                Completed Today
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
         
@@ -168,25 +204,22 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
           <CardContent className="p-4 sm:p-6">
             <div className="space-y-4 sm:space-y-6">
               {/* Tabs for different time periods */}
-              <Tabs defaultValue="year" className="w-full">
+              <Tabs defaultValue="month" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6">
-                  <TabsTrigger value="month" className="text-xs sm:text-sm">Month</TabsTrigger>
+                  <TabsTrigger value="month" className="text-xs sm:text-sm">This Month</TabsTrigger>
                   <TabsTrigger value="6months" className="text-xs sm:text-sm">6 Months</TabsTrigger>
                   <TabsTrigger value="year" className="text-xs sm:text-sm">Year</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="month" className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Last Month</h3>
                   <HeatmapGrid timeRange="month" />
                 </TabsContent>
 
                 <TabsContent value="6months" className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Last 6 Months</h3>
                   <HeatmapGrid timeRange="6months" />
                 </TabsContent>
 
                 <TabsContent value="year" className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Last Year</h3>
                   <HeatmapGrid timeRange="year" />
                 </TabsContent>
               </Tabs>
@@ -196,13 +229,17 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
                 <div className="flex items-center gap-2">
                   <span>Less</span>
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-gray-100 dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-600"></div>
-                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-100 dark:bg-green-900 rounded-sm border border-gray-200 dark:border-gray-600"></div>
-                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-200 dark:bg-green-800 rounded-sm border border-gray-200 dark:border-gray-600"></div>
-                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-400 dark:bg-green-700 rounded-sm border border-gray-200 dark:border-gray-600"></div>
-                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-600 dark:bg-green-600 rounded-sm border border-gray-200 dark:border-gray-600"></div>
+                    <div className="w-3 h-3 bg-gray-100 dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-600"></div>
+                    <div className="w-3 h-3 bg-green-100 dark:bg-green-900 rounded-sm border border-gray-200 dark:border-gray-600"></div>
+                    <div className="w-3 h-3 bg-green-200 dark:bg-green-800 rounded-sm border border-gray-200 dark:border-gray-600"></div>
+                    <div className="w-3 h-3 bg-green-400 dark:bg-green-700 rounded-sm border border-gray-200 dark:border-gray-600"></div>
+                    <div className="w-3 h-3 bg-green-600 dark:bg-green-600 rounded-sm border border-green-700 dark:border-green-500"></div>
                   </div>
                   <span>More</span>
+                  <div className="ml-2 flex items-center gap-1">
+                    <div className="w-3 h-3 bg-blue-200 dark:bg-blue-800 rounded-sm border border-blue-400 dark:border-blue-600"></div>
+                    <span className="text-xs">Today</span>
+                  </div>
                 </div>
                 <div className="text-sm">
                   {totalCompletions} completions tracked

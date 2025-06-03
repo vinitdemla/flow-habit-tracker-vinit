@@ -5,15 +5,53 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const SignIn = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // For demo purposes, just navigate to dashboard
+    
+    // Basic validation
+    if (!email || !password || (isSignUp && !name)) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Save user data to localStorage
+    localStorage.setItem('userName', name || 'Guest User');
+    localStorage.setItem('userEmail', email);
+    localStorage.setItem('isLoggedIn', 'true');
+
+    toast({
+      title: isSignUp ? "Account created!" : "Welcome back!",
+      description: `${isSignUp ? 'Account created successfully' : 'Signed in successfully'} as ${name || email}`,
+    });
+
+    // Navigate to dashboard
+    navigate('/dashboard');
+  };
+
+  const handleGuestLogin = () => {
+    localStorage.setItem('userName', 'Guest User');
+    localStorage.setItem('userEmail', 'guest@example.com');
+    localStorage.setItem('isLoggedIn', 'true');
+    
+    toast({
+      title: "Guest access",
+      description: "Signed in as guest user",
+    });
+    
     navigate('/dashboard');
   };
 
@@ -27,26 +65,44 @@ const SignIn = () => {
       <div className="absolute top-6 right-6">
         <Button 
           variant="outline" 
-          onClick={() => navigate('/dashboard')}
-          className="bg-blue-600 text-white hover:bg-blue-700"
+          onClick={handleGuestLogin}
+          className="bg-gray-100 text-gray-700 hover:bg-gray-200"
         >
-          Sign In
+          Continue as Guest
         </Button>
       </div>
 
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-blue-600 mb-2">Welcome to HabitFlow</CardTitle>
-          <p className="text-gray-600">Sign in to start tracking your habits</p>
+          <CardTitle className="text-2xl text-blue-600 mb-2">
+            {isSignUp ? 'Create Account' : 'Welcome to HabitFlow'}
+          </CardTitle>
+          <p className="text-gray-600">
+            {isSignUp ? 'Sign up to start tracking your habits' : 'Sign in to continue tracking your habits'}
+          </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignIn} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="email">Email address</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Your email address"
+                placeholder="Enter your email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -54,11 +110,11 @@ const SignIn = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Your Password</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Your password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -69,7 +125,7 @@ const SignIn = () => {
               type="submit" 
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
-              Sign in
+              {isSignUp ? 'Create Account' : 'Sign In'}
             </Button>
           </form>
 
@@ -78,10 +134,14 @@ const SignIn = () => {
               Forgot your password?
             </a>
             <div className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <a href="#" className="text-blue-600 hover:underline">
-                Sign up
-              </a>
+              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+              <button 
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-blue-600 hover:underline"
+              >
+                {isSignUp ? 'Sign in' : 'Sign up'}
+              </button>
             </div>
           </div>
         </CardContent>

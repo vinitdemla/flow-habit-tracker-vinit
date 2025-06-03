@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Target, TrendingUp, Calendar, Trophy, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,11 +39,40 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'all'>('pending');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  // Load habits from localStorage on component mount
+  // Initialize today's date tracking
   useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Load habits from localStorage
     const storedHabits = localStorage.getItem('habits');
     if (storedHabits) {
-      setHabits(JSON.parse(storedHabits));
+      const parsedHabits = JSON.parse(storedHabits);
+      
+      // Ensure each habit has today's entry initialized
+      const updatedHabits = parsedHabits.map((habit: Habit) => {
+        const completions = habit.completions || [];
+        const hasToday = completions.some(c => c.date === today);
+        
+        if (!hasToday) {
+          // Add today's entry as not completed
+          completions.push({
+            date: today,
+            completed: false
+          });
+        }
+        
+        // Update completedToday based on today's completion
+        const todayCompletion = completions.find(c => c.date === today);
+        const completedToday = todayCompletion?.completed || false;
+        
+        return {
+          ...habit,
+          completions,
+          completedToday
+        };
+      });
+      
+      setHabits(updatedHabits);
     }
   }, []);
 
@@ -103,12 +131,33 @@ const Dashboard = () => {
           }];
         }
         
+        // Calculate streak properly
+        let newStreak = 0;
+        if (newCompletedToday) {
+          // Count consecutive days from today backwards
+          const sortedCompletions = updatedCompletions
+            .filter(c => c.completed)
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          
+          for (let i = 0; i < sortedCompletions.length; i++) {
+            const completionDate = new Date(sortedCompletions[i].date);
+            const expectedDate = new Date(today);
+            expectedDate.setDate(expectedDate.getDate() - i);
+            
+            if (completionDate.toISOString().split('T')[0] === expectedDate.toISOString().split('T')[0]) {
+              newStreak++;
+            } else {
+              break;
+            }
+          }
+        }
+        
         return {
           ...habit,
           completedToday: newCompletedToday,
           completedDays: newCompletedDays,
           totalDays: newTotalDays,
-          streak: newCompletedToday ? habit.streak + 1 : 0,
+          streak: newStreak,
           completions: updatedCompletions
         };
       }
