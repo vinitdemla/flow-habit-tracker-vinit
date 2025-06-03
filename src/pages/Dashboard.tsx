@@ -8,6 +8,12 @@ import { Header } from '@/components/Header';
 import { AddHabitDialog } from '@/components/AddHabitDialog';
 import { HeatmapModal } from '@/components/HeatmapModal';
 
+interface HabitCompletion {
+  date: string;
+  completed: boolean;
+  completionTime?: string;
+}
+
 interface Habit {
   id: string;
   name: string;
@@ -20,6 +26,7 @@ interface Habit {
   icon: string;
   frequency: string;
   customDays?: string[];
+  completions?: HabitCompletion[];
 }
 
 const Dashboard = () => {
@@ -42,14 +49,15 @@ const Dashboard = () => {
     localStorage.setItem('habits', JSON.stringify(habits));
   }, [habits]);
 
-  const addHabit = (newHabit: Omit<Habit, 'id' | 'streak' | 'completedToday' | 'totalDays' | 'completedDays'>) => {
+  const addHabit = (newHabit: Omit<Habit, 'id' | 'streak' | 'completedToday' | 'totalDays' | 'completedDays' | 'completions'>) => {
     const habit: Habit = {
       ...newHabit,
       id: Date.now().toString(),
       streak: 0,
       completedToday: false,
       totalDays: 1,
-      completedDays: 0
+      completedDays: 0,
+      completions: []
     };
     setHabits(prev => [...prev, habit]);
   };
@@ -57,16 +65,43 @@ const Dashboard = () => {
   const toggleHabitCompletion = (habitId: string) => {
     setHabits(prev => prev.map(habit => {
       if (habit.id === habitId) {
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        
         const newCompletedToday = !habit.completedToday;
         const newCompletedDays = newCompletedToday ? habit.completedDays + 1 : Math.max(0, habit.completedDays - 1);
         const newTotalDays = Math.max(habit.totalDays, newCompletedDays);
+        
+        // Update completions array
+        const completions = habit.completions || [];
+        const existingCompletionIndex = completions.findIndex(c => c.date === today);
+        
+        let updatedCompletions;
+        if (existingCompletionIndex >= 0) {
+          // Update existing completion
+          updatedCompletions = [...completions];
+          updatedCompletions[existingCompletionIndex] = {
+            ...updatedCompletions[existingCompletionIndex],
+            completed: newCompletedToday,
+            completionTime: newCompletedToday ? currentTime : undefined
+          };
+        } else {
+          // Add new completion
+          updatedCompletions = [...completions, {
+            date: today,
+            completed: newCompletedToday,
+            completionTime: newCompletedToday ? currentTime : undefined
+          }];
+        }
         
         return {
           ...habit,
           completedToday: newCompletedToday,
           completedDays: newCompletedDays,
           totalDays: newTotalDays,
-          streak: newCompletedToday ? habit.streak + 1 : 0
+          streak: newCompletedToday ? habit.streak + 1 : 0,
+          completions: updatedCompletions
         };
       }
       return habit;

@@ -1,3 +1,4 @@
+
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -22,8 +23,20 @@ import {
 } from 'recharts';
 import { useState, useEffect } from 'react';
 
+interface HabitCompletion {
+  date: string;
+  completed: boolean;
+  completionTime?: string; // Format: "HH:MM"
+}
+
+interface Habit {
+  id: string;
+  name: string;
+  completions?: HabitCompletion[];
+}
+
 const Analytics = () => {
-  const [habits, setHabits] = useState([]);
+  const [habits, setHabits] = useState<Habit[]>([]);
 
   useEffect(() => {
     // Get habits from localStorage
@@ -33,7 +46,7 @@ const Analytics = () => {
     }
   }, []);
 
-  // Generate real data based on actual habits
+  // Generate weekly data based on actual completion days
   const generateWeeklyData = () => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     return days.map(day => {
@@ -42,10 +55,11 @@ const Analytics = () => {
       habits.forEach(habit => {
         if (habit.completions) {
           const dayCompletions = habit.completions.filter(completion => {
+            if (!completion.completed) return false;
             const completionDate = new Date(completion.date);
             const dayOfWeek = completionDate.getDay();
             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            return dayNames[dayOfWeek] === day && completion.completed;
+            return dayNames[dayOfWeek] === day;
           }).length;
           totalCompletions += dayCompletions;
         }
@@ -53,8 +67,7 @@ const Analytics = () => {
 
       return {
         day,
-        completions: totalCompletions,
-        value: habits.length > 0 ? (totalCompletions / habits.length) * 100 : 0
+        completions: totalCompletions
       };
     });
   };
@@ -88,12 +101,42 @@ const Analytics = () => {
     return weeks;
   };
 
+  // Generate time of day data based on actual completion times
   const generateTimeOfDayData = () => {
-    const times = ['6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'];
-    return times.map(time => {
-      // For now, generate based on habit completion patterns
-      const rate = habits.length > 0 ? Math.floor(Math.random() * 100) : 0;
-      return { time, rate };
+    const timeSlots = [
+      { label: '6AM', start: 6, end: 8 },
+      { label: '8AM', start: 8, end: 10 },
+      { label: '10AM', start: 10, end: 12 },
+      { label: '12PM', start: 12, end: 14 },
+      { label: '2PM', start: 14, end: 16 },
+      { label: '4PM', start: 16, end: 18 },
+      { label: '6PM', start: 18, end: 20 },
+      { label: '8PM', start: 20, end: 22 },
+      { label: '10PM', start: 22, end: 24 }
+    ];
+
+    return timeSlots.map(slot => {
+      let completionsInSlot = 0;
+      let totalCompletions = 0;
+
+      habits.forEach(habit => {
+        if (habit.completions) {
+          habit.completions.forEach(completion => {
+            if (completion.completed) {
+              totalCompletions++;
+              if (completion.completionTime) {
+                const [hours] = completion.completionTime.split(':').map(Number);
+                if (hours >= slot.start && hours < slot.end) {
+                  completionsInSlot++;
+                }
+              }
+            }
+          });
+        }
+      });
+
+      const rate = totalCompletions > 0 ? Math.round((completionsInSlot / totalCompletions) * 100) : 0;
+      return { time: slot.label, rate };
     });
   };
 
@@ -104,10 +147,6 @@ const Analytics = () => {
   const chartConfig = {
     rate: {
       label: 'Success Rate (%)',
-      color: '#3B82F6',
-    },
-    value: {
-      label: 'Completion Rate',
       color: '#3B82F6',
     },
     completions: {
@@ -230,10 +269,7 @@ const Analytics = () => {
                 />
                 <ChartTooltip 
                   content={<ChartTooltipContent />}
-                  formatter={(value, name) => [
-                    Math.round(value as number), 
-                    name === 'completions' ? 'Completions' : 'Rate'
-                  ]}
+                  formatter={(value) => [Math.round(value as number), 'Completions']}
                 />
                 <Bar 
                   dataKey="completions" 

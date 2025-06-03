@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -19,7 +18,12 @@ export const Header = () => {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="container mx-auto flex items-center justify-between">
-        <div className="text-2xl font-bold text-blue-600">HabitFlow</div>
+        <button 
+          onClick={() => navigate('/')}
+          className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
+        >
+          HabitFlow
+        </button>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
