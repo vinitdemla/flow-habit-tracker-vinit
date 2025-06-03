@@ -1,6 +1,6 @@
-
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -19,9 +19,16 @@ import {
   XAxis, 
   YAxis, 
   LineChart, 
-  Line 
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer
 } from 'recharts';
 import { useState, useEffect } from 'react';
+import { AchievementBadges } from '@/components/AchievementBadges';
+import { PersonalRecords } from '@/components/PersonalRecords';
+import { ExportData } from '@/components/ExportData';
 
 interface HabitCompletion {
   date: string;
@@ -37,6 +44,7 @@ interface Habit {
 
 const Analytics = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [timeRange, setTimeRange] = useState('weekly');
 
   useEffect(() => {
     const storedHabits = localStorage.getItem('habits');
@@ -140,9 +148,53 @@ const Analytics = () => {
     });
   };
 
+  // Generate category distribution data
+  const generateCategoryData = () => {
+    const categories = habits.reduce((acc, habit) => {
+      acc[habit.category] = (acc[habit.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const colors = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'];
+    
+    return Object.entries(categories).map(([category, count], index) => ({
+      name: category,
+      value: count,
+      fill: colors[index % colors.length]
+    }));
+  };
+
+  // Generate monthly data
+  const generateMonthlyData = () => {
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = date.toISOString().slice(0, 7); // YYYY-MM format
+      
+      let totalCompletions = 0;
+      habits.forEach(habit => {
+        if (habit.completions) {
+          const monthCompletions = habit.completions.filter(c => 
+            c.completed && c.date.startsWith(monthKey)
+          ).length;
+          totalCompletions += monthCompletions;
+        }
+      });
+
+      months.push({
+        month: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+        completions: totalCompletions
+      });
+    }
+    return months;
+  };
+
   const weeklyData = generateWeeklyData();
   const completionRateData = generateCompletionRateData();
   const timeOfDayData = generateTimeOfDayData();
+  const categoryData = generateCategoryData();
+  const monthlyData = generateMonthlyData();
 
   const chartConfig = {
     rate: {
@@ -156,14 +208,14 @@ const Analytics = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
       
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-          <Select defaultValue="weekly">
-            <SelectTrigger className="w-48">
+      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Analytics</h1>
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -174,113 +226,156 @@ const Analytics = () => {
           </Select>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>7-Day Average Completion Rate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={chartConfig} className="h-80">
-                <LineChart data={completionRateData}>
-                  <XAxis 
-                    dataKey="week" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                    domain={[0, 100]}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <ChartTooltip 
-                    content={<ChartTooltipContent />}
-                    formatter={(value) => [`${value}%`, 'Success Rate']}
-                  />
-                  <Line 
-                    dataKey="rate" 
-                    stroke="#3B82F6" 
-                    strokeWidth={3}
-                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 5 }}
-                    type="monotone"
-                  />
-                </LineChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="patterns">Patterns</TabsTrigger>
+            <TabsTrigger value="achievements">Achievements</TabsTrigger>
+            <TabsTrigger value="export">Export</TabsTrigger>
+          </TabsList>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Completions by Time of Day</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={chartConfig} className="h-80">
-                <BarChart data={timeOfDayData}>
-                  <XAxis 
-                    dataKey="time" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                    domain={[0, 'dataMax']}
-                    tickFormatter={(value) => Math.round(value).toString()}
-                  />
-                  <ChartTooltip 
-                    content={<ChartTooltipContent />}
-                    formatter={(value) => [Math.round(value as number), 'Completions']}
-                  />
-                  <Bar 
-                    dataKey="completions" 
-                    fill="#3B82F6" 
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={40}
-                  />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-        </div>
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Completion Rate Trend</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="h-80">
+                    <LineChart data={timeRange === 'monthly' ? monthlyData : completionRateData}>
+                      <XAxis 
+                        dataKey={timeRange === 'monthly' ? 'month' : 'week'}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                      />
+                      <YAxis 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        domain={[0, timeRange === 'monthly' ? 'dataMax' : 100]}
+                        tickFormatter={(value) => timeRange === 'monthly' ? value.toString() : `${value}%`}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Line 
+                        dataKey={timeRange === 'monthly' ? 'completions' : 'rate'}
+                        stroke="#3B82F6" 
+                        strokeWidth={3}
+                        dot={{ fill: '#3B82F6', strokeWidth: 2, r: 5 }}
+                        type="monotone"
+                      />
+                    </LineChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Weekly Completion Pattern</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-80">
-              <BarChart data={weeklyData}>
-                <XAxis 
-                  dataKey="day" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                  domain={[0, 'dataMax']}
-                  tickFormatter={(value) => Math.round(value).toString()}
-                />
-                <ChartTooltip 
-                  content={<ChartTooltipContent />}
-                  formatter={(value) => [Math.round(value as number), 'Completions']}
-                />
-                <Bar 
-                  dataKey="completions" 
-                  fill="#10B981" 
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={60}
-                />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Habit Categories</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          dataKey="value"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {categoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            <PersonalRecords habits={habits} />
+          </TabsContent>
+
+          <TabsContent value="patterns" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Completions by Time of Day</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="h-80">
+                    <BarChart data={timeOfDayData}>
+                      <XAxis 
+                        dataKey="time" 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                      />
+                      <YAxis 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        domain={[0, 'dataMax']}
+                        tickFormatter={(value) => Math.round(value).toString()}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar 
+                        dataKey="completions" 
+                        fill="#3B82F6" 
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={40}
+                      />
+                    </BarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Weekly Completion Pattern</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="h-80">
+                    <BarChart data={weeklyData}>
+                      <XAxis 
+                        dataKey="day" 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                      />
+                      <YAxis 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        domain={[0, 'dataMax']}
+                        tickFormatter={(value) => Math.round(value).toString()}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar 
+                        dataKey="completions" 
+                        fill="#10B981" 
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={60}
+                      />
+                    </BarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="achievements">
+            <AchievementBadges habits={habits} />
+          </TabsContent>
+
+          <TabsContent value="export">
+            <ExportData habits={habits} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
