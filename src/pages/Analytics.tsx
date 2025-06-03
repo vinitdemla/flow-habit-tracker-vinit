@@ -1,4 +1,3 @@
-
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -226,30 +225,30 @@ const Analytics = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Analytics</h1>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-full sm:w-48">
+            <SelectTrigger className="w-full sm:w-48 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="weekly">Weekly View</SelectItem>
-              <SelectItem value="monthly">Monthly View</SelectItem>
-              <SelectItem value="yearly">Yearly View</SelectItem>
+            <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+              <SelectItem value="weekly" className="dark:text-gray-100 dark:hover:bg-gray-700">Weekly View</SelectItem>
+              <SelectItem value="monthly" className="dark:text-gray-100 dark:hover:bg-gray-700">Monthly View</SelectItem>
+              <SelectItem value="yearly" className="dark:text-gray-100 dark:hover:bg-gray-700">Yearly View</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="patterns">Patterns</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            <TabsTrigger value="export">Export</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 dark:bg-gray-800">
+            <TabsTrigger value="overview" className="dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Overview</TabsTrigger>
+            <TabsTrigger value="patterns" className="dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Patterns</TabsTrigger>
+            <TabsTrigger value="achievements" className="dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Achievements</TabsTrigger>
+            <TabsTrigger value="export" className="dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Export</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle>Completion Rate Trend</CardTitle>
+                  <CardTitle className="dark:text-gray-100">Completion Rate Trend</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ChartContainer config={chartConfig} className="h-80">
@@ -280,9 +279,9 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle>Habit Categories</CardTitle>
+                  <CardTitle className="dark:text-gray-100">Habit Categories</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ChartContainer config={chartConfig} className="h-80">
@@ -313,9 +312,9 @@ const Analytics = () => {
 
           <TabsContent value="patterns" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle>Completions by Time of Day</CardTitle>
+                  <CardTitle className="dark:text-gray-100">Completions by Time of Day</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ChartContainer config={chartConfig} className="h-80">
@@ -345,9 +344,9 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle>Weekly Completion Pattern</CardTitle>
+                  <CardTitle className="dark:text-gray-100">Weekly Completion Pattern</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ChartContainer config={chartConfig} className="h-80">

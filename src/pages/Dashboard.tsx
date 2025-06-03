@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus, Target, TrendingUp, Calendar, Trophy, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { AddHabitDialog } from '@/components/AddHabitDialog';
 import { HeatmapModal } from '@/components/HeatmapModal';
 import { StatsCard } from '@/components/StatsCard';
 import { HabitTemplates } from '@/components/HabitTemplates';
-import { AchievementBadges } from '@/components/AchievementBadges';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface HabitCompletion {
@@ -201,22 +201,17 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Achievements Section */}
-        <div className="mb-6 sm:mb-8">
-          <AchievementBadges habits={habits} />
-        </div>
-
         {/* Your Habits Section */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
-          <h2 className="text-xl sm:text-2xl font-semibold dark:text-gray-100">Your Habits</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Your Habits</h2>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <HabitTemplates onSelectTemplate={addHabitFromTemplate} />
             <Button 
               onClick={() => setIsAddDialogOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+              className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white w-full sm:w-auto"
               size="sm"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2 text-white" />
               Add New Habit
             </Button>
           </div>
@@ -224,12 +219,12 @@ const Dashboard = () => {
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex space-x-4 sm:space-x-8 border-b overflow-x-auto pb-2 flex-1">
+          <div className="flex space-x-4 sm:space-x-8 border-b border-gray-200 dark:border-gray-700 overflow-x-auto pb-2 flex-1">
             <button 
               className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base ${
                 activeTab === 'pending' 
-                  ? 'border-blue-600 text-blue-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
               onClick={() => setActiveTab('pending')}
             >
@@ -238,8 +233,8 @@ const Dashboard = () => {
             <button 
               className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base ${
                 activeTab === 'completed' 
-                  ? 'border-blue-600 text-blue-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
               onClick={() => setActiveTab('completed')}
             >
@@ -248,8 +243,8 @@ const Dashboard = () => {
             <button 
               className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base ${
                 activeTab === 'all' 
-                  ? 'border-blue-600 text-blue-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
               onClick={() => setActiveTab('all')}
             >
@@ -258,13 +253,13 @@ const Dashboard = () => {
           </div>
           
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full sm:w-48">
+            <SelectTrigger className="w-full sm:w-48 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
               {categories.map(category => (
-                <SelectItem key={category} value={category}>
+                <SelectItem key={category} value={category} className="dark:text-gray-100 dark:hover:bg-gray-700">
                   {category === 'all' ? 'All Categories' : category}
                 </SelectItem>
               ))}
@@ -275,31 +270,31 @@ const Dashboard = () => {
         {/* Habits List */}
         {displayedHabits.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-sm sm:text-base">
+            <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
               {totalHabits === 0 ? 'No habits created yet. Click "Add New Habit" to get started!' : 'No habits found in this category'}
             </p>
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4">
             {displayedHabits.map((habit) => (
-              <Card key={habit.id} className={`hover:shadow-md transition-shadow ${
-                habit.completedToday ? 'bg-green-50 border-green-200' : ''
+              <Card key={habit.id} className={`hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700 ${
+                habit.completedToday ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : ''
               }`}>
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-start space-x-3 sm:space-x-4 flex-1">
                       <div className="text-xl sm:text-2xl">{habit.icon}</div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-base sm:text-lg truncate">{habit.name}</h3>
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 mt-1">
+                        <h3 className="font-semibold text-base sm:text-lg truncate text-gray-900 dark:text-gray-100">{habit.name}</h3>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                           <span className="flex items-center">
                             <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                             {habit.streak}
                           </span>
-                          <Badge variant="outline" className="text-xs">{habit.frequency}</Badge>
+                          <Badge variant="outline" className="text-xs dark:border-gray-600 dark:text-gray-300">{habit.frequency}</Badge>
                           <span className="hidden sm:inline">{habit.completedDays}/{habit.totalDays} completed</span>
                         </div>
-                        <div className="sm:hidden text-xs text-gray-500 mt-1">
+                        <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {habit.completedDays}/{habit.totalDays} completed
                         </div>
                       </div>
@@ -308,20 +303,20 @@ const Dashboard = () => {
                       {!habit.completedToday && activeTab === 'pending' && (
                         <Button 
                           onClick={() => toggleHabitCompletion(habit.id)}
-                          className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
+                          className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white flex-1 sm:flex-none"
                           size="sm"
                         >
                           Complete
                         </Button>
                       )}
                       {habit.completedToday && (
-                        <Badge className="bg-green-600">Completed</Badge>
+                        <Badge className="bg-green-600 text-white dark:bg-green-600 dark:text-white">Completed</Badge>
                       )}
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => openHeatmap(habit)}
-                        className="whitespace-nowrap"
+                        className="whitespace-nowrap dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
                       >
                         Details
                       </Button>
