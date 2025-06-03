@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ChevronDown } from 'lucide-react';
 
 interface AddHabitDialogProps {
   open: boolean;
@@ -20,7 +23,19 @@ interface AddHabitDialogProps {
 
 const habitIcons = [
   '💪', '🔥', '📚', '💧', '🏃‍♂️', '🍎', '🎯', '🧘‍♂️', '🥗', '🎵',
-  '🌱', '🧠', '💝', '💎', '📝', '🏋️‍♂️', '🍌', '🚶‍♂️', '🍎'
+  '🌱', '🧠', '💝', '💎', '📝', '🏋️‍♂️', '🍌', '🚶‍♂️', '🚭', '⚡',
+  '🌟', '🎨', '💻', '📱', '🎮', '🛏️', '🌅', '🌙', '☕', '🍃',
+  '🎪', '🎭', '🎬', '📖', '✍️', '🔬', '🎯', '🏆', '🎊', '🎈'
+];
+
+const daysOfWeek = [
+  { id: 'monday', label: 'Monday' },
+  { id: 'tuesday', label: 'Tuesday' },
+  { id: 'wednesday', label: 'Wednesday' },
+  { id: 'thursday', label: 'Thursday' },
+  { id: 'friday', label: 'Friday' },
+  { id: 'saturday', label: 'Saturday' },
+  { id: 'sunday', label: 'Sunday' }
 ];
 
 export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialogProps) => {
@@ -29,6 +44,8 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
   const [category, setCategory] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('💪');
   const [frequency, setFrequency] = useState('Daily');
+  const [customDays, setCustomDays] = useState<string[]>([]);
+  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +65,16 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
     setCategory('');
     setSelectedIcon('💪');
     setFrequency('Daily');
+    setCustomDays([]);
     onOpenChange(false);
+  };
+
+  const handleCustomDayToggle = (dayId: string) => {
+    setCustomDays(prev => 
+      prev.includes(dayId) 
+        ? prev.filter(id => id !== dayId)
+        : [...prev, dayId]
+    );
   };
 
   return (
@@ -74,33 +100,38 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
 
             <div className="space-y-2">
               <Label>Icon</Label>
-              <div className="relative">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-start text-left"
-                  onClick={() => {}} // This would open icon picker
-                >
-                  <span className="text-lg mr-2">{selectedIcon}</span>
-                  <span className="text-sm text-gray-500">Choose icon</span>
-                </Button>
-                
-                {/* Icon Grid */}
-                <div className="absolute top-full left-0 right-0 mt-1 p-3 bg-white border rounded-md shadow-lg z-50 grid grid-cols-5 gap-2">
-                  {habitIcons.map((icon, index) => (
-                    <Button
-                      key={index}
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-lg h-10 w-10 p-0"
-                      onClick={() => setSelectedIcon(icon)}
-                    >
-                      {icon}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <Popover open={isIconPickerOpen} onOpenChange={setIsIconPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-start text-left"
+                  >
+                    <span className="text-lg mr-2">{selectedIcon}</span>
+                    <span className="text-sm text-gray-500 flex-1">Choose icon</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-3" align="start">
+                  <div className="grid grid-cols-8 gap-2">
+                    {habitIcons.map((icon, index) => (
+                      <Button
+                        key={index}
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-lg h-10 w-10 p-0 hover:bg-gray-100"
+                        onClick={() => {
+                          setSelectedIcon(icon);
+                          setIsIconPickerOpen(false);
+                        }}
+                      >
+                        {icon}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
@@ -129,6 +160,42 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
             </Select>
           </div>
 
+          {frequency === 'Custom' && (
+            <div className="space-y-3">
+              <Label>Custom Days</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {daysOfWeek.map((day) => (
+                  <div key={day.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={day.id}
+                      checked={customDays.includes(day.id)}
+                      onCheckedChange={() => handleCustomDayToggle(day.id)}
+                    />
+                    <Label htmlFor={day.id} className="text-sm font-normal">
+                      {day.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label>Category</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Health">Health</SelectItem>
+                <SelectItem value="Personal">Personal</SelectItem>
+                <SelectItem value="Productivity">Productivity</SelectItem>
+                <SelectItem value="Fitness">Fitness</SelectItem>
+                <SelectItem value="Learning">Learning</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
@@ -141,7 +208,7 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
             <Button
               type="submit"
               className="flex-1 bg-blue-600 hover:bg-blue-700"
-              disabled={!name.trim()}
+              disabled={!name.trim() || !category}
             >
               Create
             </Button>

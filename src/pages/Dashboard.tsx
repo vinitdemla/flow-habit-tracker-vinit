@@ -35,6 +35,7 @@ const Dashboard = () => {
   ]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'all'>('pending');
 
   const addHabit = (newHabit: Omit<Habit, 'id' | 'streak' | 'completedToday' | 'totalDays' | 'completedDays'>) => {
     const habit: Habit = {
@@ -48,6 +49,22 @@ const Dashboard = () => {
     setHabits(prev => [...prev, habit]);
   };
 
+  const toggleHabitCompletion = (habitId: string) => {
+    setHabits(prev => prev.map(habit => {
+      if (habit.id === habitId) {
+        const newCompletedToday = !habit.completedToday;
+        return {
+          ...habit,
+          completedToday: newCompletedToday,
+          completedDays: newCompletedToday ? habit.completedDays + 1 : Math.max(0, habit.completedDays - 1),
+          totalDays: habit.totalDays + (newCompletedToday ? 1 : 0),
+          streak: newCompletedToday ? habit.streak + 1 : Math.max(0, habit.streak - 1)
+        };
+      }
+      return habit;
+    }));
+  };
+
   const completedToday = habits.filter(h => h.completedToday).length;
   const totalHabits = habits.length;
   const completionRate = totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 14;
@@ -56,6 +73,21 @@ const Dashboard = () => {
 
   const pendingHabits = habits.filter(h => !h.completedToday);
   const completedHabits = habits.filter(h => h.completedToday);
+
+  const getDisplayedHabits = () => {
+    switch (activeTab) {
+      case 'pending':
+        return pendingHabits;
+      case 'completed':
+        return completedHabits;
+      case 'all':
+        return habits;
+      default:
+        return pendingHabits;
+    }
+  };
+
+  const displayedHabits = getDisplayedHabits();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -133,26 +165,49 @@ const Dashboard = () => {
 
         {/* Habit Tabs */}
         <div className="flex space-x-8 mb-6 border-b">
-          <button className="pb-2 border-b-2 border-blue-600 text-blue-600 font-medium">
+          <button 
+            className={`pb-2 border-b-2 font-medium ${
+              activeTab === 'pending' 
+                ? 'border-blue-600 text-blue-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('pending')}
+          >
             Pending Today ({pendingHabits.length})
           </button>
-          <button className="pb-2 text-gray-500">
+          <button 
+            className={`pb-2 border-b-2 font-medium ${
+              activeTab === 'completed' 
+                ? 'border-blue-600 text-blue-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('completed')}
+          >
             Completed ({completedHabits.length})
           </button>
-          <button className="pb-2 text-gray-500">
+          <button 
+            className={`pb-2 border-b-2 font-medium ${
+              activeTab === 'all' 
+                ? 'border-blue-600 text-blue-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('all')}
+          >
             All ({totalHabits})
           </button>
         </div>
 
         {/* Habits List */}
-        {pendingHabits.length === 0 ? (
+        {displayedHabits.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">No habits found in this category</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {pendingHabits.map((habit) => (
-              <Card key={habit.id} className="hover:shadow-md transition-shadow">
+            {displayedHabits.map((habit) => (
+              <Card key={habit.id} className={`hover:shadow-md transition-shadow ${
+                habit.completedToday ? 'bg-green-50 border-green-200' : ''
+              }`}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
@@ -168,9 +223,22 @@ const Dashboard = () => {
                         </div>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
+                    <div className="flex items-center space-x-3">
+                      {!habit.completedToday && activeTab === 'pending' && (
+                        <Button 
+                          onClick={() => toggleHabitCompletion(habit.id)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          Complete
+                        </Button>
+                      )}
+                      {habit.completedToday && (
+                        <Badge className="bg-green-600">Completed</Badge>
+                      )}
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
