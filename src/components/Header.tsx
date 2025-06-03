@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Menu, X, BarChart3, Home, Settings } from 'lucide-react';
+import { Menu, X, BarChart3, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -23,7 +23,7 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">HabitFlow</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">HabitRise</h1>
           </div>
 
           {/* Desktop Navigation */}
