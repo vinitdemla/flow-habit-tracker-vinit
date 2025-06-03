@@ -244,8 +244,8 @@ const Analytics = () => {
                 />
               </BarChart>
             </ChartContainer>
-          </Card>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
