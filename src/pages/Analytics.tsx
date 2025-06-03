@@ -1,4 +1,3 @@
-
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,8 +22,7 @@ import {
   Line,
   PieChart,
   Pie,
-  Cell,
-  ResponsiveContainer
+  Cell
 } from 'recharts';
 import { useState, useEffect } from 'react';
 import { AchievementBadges } from '@/components/AchievementBadges';
@@ -245,6 +243,22 @@ const Analytics = () => {
       label: 'Completions',
       color: '#10B981',
     },
+    month: {
+      label: 'Month',
+      color: '#3B82F6',
+    },
+    week: {
+      label: 'Week',
+      color: '#3B82F6',
+    },
+    time: {
+      label: 'Time',
+      color: '#3B82F6',
+    },
+    day: {
+      label: 'Day',
+      color: '#10B981',
+    },
   };
 
   return (
@@ -284,7 +298,7 @@ const Analytics = () => {
                 </CardHeader>
                 <CardContent className="p-2 sm:p-6">
                   <div className="w-full h-60 sm:h-80">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ChartContainer config={chartConfig}>
                       <LineChart data={timeRange === 'monthly' ? monthlyData : completionRateData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                         <XAxis 
                           dataKey={timeRange === 'monthly' ? 'month' : 'week'}
@@ -308,7 +322,7 @@ const Analytics = () => {
                           type="monotone"
                         />
                       </LineChart>
-                    </ResponsiveContainer>
+                    </ChartContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -319,7 +333,7 @@ const Analytics = () => {
                 </CardHeader>
                 <CardContent className="p-2 sm:p-6">
                   <div className="w-full h-60 sm:h-80">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ChartContainer config={chartConfig}>
                       <PieChart margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                         <Pie
                           data={categoryData}
@@ -335,7 +349,7 @@ const Analytics = () => {
                         </Pie>
                         <ChartTooltip content={<ChartTooltipContent />} />
                       </PieChart>
-                    </ResponsiveContainer>
+                    </ChartContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -352,7 +366,7 @@ const Analytics = () => {
                 </CardHeader>
                 <CardContent className="p-2 sm:p-6">
                   <div className="w-full h-60 sm:h-80">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ChartContainer config={chartConfig}>
                       <BarChart data={timeOfDayData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                         <XAxis 
                           dataKey="time" 
@@ -375,7 +389,7 @@ const Analytics = () => {
                           maxBarSize={40}
                         />
                       </BarChart>
-                    </ResponsiveContainer>
+                    </ChartContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -386,7 +400,7 @@ const Analytics = () => {
                 </CardHeader>
                 <CardContent className="p-2 sm:p-6">
                   <div className="w-full h-60 sm:h-80">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ChartContainer config={chartConfig}>
                       <BarChart data={weeklyData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                         <XAxis 
                           dataKey="day" 
@@ -409,7 +423,7 @@ const Analytics = () => {
                           maxBarSize={60}
                         />
                       </BarChart>
-                    </ResponsiveContainer>
+                    </ChartContainer>
                   </div>
                 </CardContent>
               </Card>
