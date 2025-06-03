@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { User, LogOut } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface HeatmapModalProps {
@@ -155,40 +154,14 @@ export const HeatmapModal = ({ open, onOpenChange, habit }: HeatmapModalProps) =
   const totalDays = habit.completions?.length || 0;
   const successRate = totalDays > 0 ? Math.round((totalCompletions / totalDays) * 100) : 0;
 
-  const handleLogout = () => {
-    // Clear all localStorage data
-    localStorage.clear();
-    // Refresh the page to reset the app state
-    window.location.reload();
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto animate-scale-in">
         <DialogHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <DialogTitle className="flex items-center gap-2">
-              <span className="text-xl sm:text-2xl">{habit.icon}</span>
-              <span className="text-lg sm:text-xl">{habit.name} - Activity Heatmap</span>
-            </DialogTitle>
-            
-            {/* User Account Section */}
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Guest User</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="flex items-center gap-2 hover:bg-red-50 hover:border-red-200 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:border-red-800 dark:hover:text-red-400 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
-            </div>
-          </div>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="text-xl sm:text-2xl">{habit.icon}</span>
+            <span className="text-lg sm:text-xl">{habit.name} - Activity Heatmap</span>
+          </DialogTitle>
         </DialogHeader>
         
         <Card className="animate-fade-in">

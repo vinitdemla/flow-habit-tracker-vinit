@@ -1,3 +1,4 @@
+
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -266,12 +267,14 @@ const Analytics = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 dark:bg-gray-800">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Overview</TabsTrigger>
-            <TabsTrigger value="patterns" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Patterns</TabsTrigger>
-            <TabsTrigger value="achievements" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Achievements</TabsTrigger>
-            <TabsTrigger value="export" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Export</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="grid w-full min-w-[320px] grid-cols-4 dark:bg-gray-800">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Overview</TabsTrigger>
+              <TabsTrigger value="patterns" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Patterns</TabsTrigger>
+              <TabsTrigger value="achievements" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Achievements</TabsTrigger>
+              <TabsTrigger value="export" className="text-xs sm:text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Export</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -279,32 +282,34 @@ const Analytics = () => {
                 <CardHeader>
                   <CardTitle className="text-sm sm:text-base dark:text-gray-100">Completion Rate Trend</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ChartContainer config={chartConfig} className="h-60 sm:h-80">
-                    <LineChart data={timeRange === 'monthly' ? monthlyData : completionRateData}>
-                      <XAxis 
-                        dataKey={timeRange === 'monthly' ? 'month' : 'week'}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
-                      />
-                      <YAxis 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
-                        domain={[0, timeRange === 'monthly' ? 'dataMax' : 100]}
-                        tickFormatter={(value) => timeRange === 'monthly' ? value.toString() : `${value}%`}
-                      />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line 
-                        dataKey={timeRange === 'monthly' ? 'completions' : 'rate'}
-                        stroke="#3B82F6" 
-                        strokeWidth={3}
-                        dot={{ fill: '#3B82F6', strokeWidth: 2, r: 5 }}
-                        type="monotone"
-                      />
-                    </LineChart>
-                  </ChartContainer>
+                <CardContent className="p-2 sm:p-6">
+                  <div className="w-full h-60 sm:h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={timeRange === 'monthly' ? monthlyData : completionRateData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                        <XAxis 
+                          dataKey={timeRange === 'monthly' ? 'month' : 'week'}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                        />
+                        <YAxis 
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                          domain={[0, timeRange === 'monthly' ? 'dataMax' : 100]}
+                          tickFormatter={(value) => timeRange === 'monthly' ? value.toString() : `${value}%`}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Line 
+                          dataKey={timeRange === 'monthly' ? 'completions' : 'rate'}
+                          stroke="#3B82F6" 
+                          strokeWidth={2}
+                          dot={{ fill: '#3B82F6', strokeWidth: 2, r: 3 }}
+                          type="monotone"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -312,15 +317,15 @@ const Analytics = () => {
                 <CardHeader>
                   <CardTitle className="text-sm sm:text-base dark:text-gray-100">Habit Categories</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ChartContainer config={chartConfig} className="h-60 sm:h-80">
+                <CardContent className="p-2 sm:p-6">
+                  <div className="w-full h-60 sm:h-80">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
+                      <PieChart margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                         <Pie
                           data={categoryData}
                           cx="50%"
                           cy="50%"
-                          outerRadius={60}
+                          outerRadius="80%"
                           dataKey="value"
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         >
@@ -331,7 +336,7 @@ const Analytics = () => {
                         <ChartTooltip content={<ChartTooltipContent />} />
                       </PieChart>
                     </ResponsiveContainer>
-                  </ChartContainer>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -345,31 +350,33 @@ const Analytics = () => {
                 <CardHeader>
                   <CardTitle className="text-sm sm:text-base dark:text-gray-100">Completions by Time of Day</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ChartContainer config={chartConfig} className="h-60 sm:h-80">
-                    <BarChart data={timeOfDayData}>
-                      <XAxis 
-                        dataKey="time" 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
-                      />
-                      <YAxis 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
-                        domain={[0, 'dataMax']}
-                        tickFormatter={(value) => Math.round(value).toString()}
-                      />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar 
-                        dataKey="completions" 
-                        fill="#3B82F6" 
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={40}
-                      />
-                    </BarChart>
-                  </ChartContainer>
+                <CardContent className="p-2 sm:p-6">
+                  <div className="w-full h-60 sm:h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={timeOfDayData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                        <XAxis 
+                          dataKey="time" 
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                        />
+                        <YAxis 
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                          domain={[0, 'dataMax']}
+                          tickFormatter={(value) => Math.round(value).toString()}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar 
+                          dataKey="completions" 
+                          fill="#3B82F6" 
+                          radius={[4, 4, 0, 0]}
+                          maxBarSize={40}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -377,31 +384,33 @@ const Analytics = () => {
                 <CardHeader>
                   <CardTitle className="text-sm sm:text-base dark:text-gray-100">Weekly Completion Pattern</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ChartContainer config={chartConfig} className="h-60 sm:h-80">
-                    <BarChart data={weeklyData}>
-                      <XAxis 
-                        dataKey="day" 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
-                      />
-                      <YAxis 
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 10 }}
-                        domain={[0, 'dataMax']}
-                        tickFormatter={(value) => Math.round(value).toString()}
-                      />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar 
-                        dataKey="completions" 
-                        fill="#10B981" 
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={60}
-                      />
-                    </BarChart>
-                  </ChartContainer>
+                <CardContent className="p-2 sm:p-6">
+                  <div className="w-full h-60 sm:h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={weeklyData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                        <XAxis 
+                          dataKey="day" 
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                        />
+                        <YAxis 
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                          domain={[0, 'dataMax']}
+                          tickFormatter={(value) => Math.round(value).toString()}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar 
+                          dataKey="completions" 
+                          fill="#10B981" 
+                          radius={[4, 4, 0, 0]}
+                          maxBarSize={60}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </CardContent>
               </Card>
             </div>
