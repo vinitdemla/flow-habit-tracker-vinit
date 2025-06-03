@@ -26,7 +26,7 @@ import { useState, useEffect } from 'react';
 interface HabitCompletion {
   date: string;
   completed: boolean;
-  completionTime?: string; // Format: "HH:MM"
+  completionTime?: string;
 }
 
 interface Habit {
@@ -39,12 +39,46 @@ const Analytics = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
 
   useEffect(() => {
-    // Get habits from localStorage
     const storedHabits = localStorage.getItem('habits');
     if (storedHabits) {
       setHabits(JSON.parse(storedHabits));
     }
   }, []);
+
+  // Generate 7-day average completion rate data
+  const generateCompletionRateData = () => {
+    const weeks = [];
+    for (let i = 11; i >= 0; i--) {
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - (i * 7));
+      
+      let totalCompletions = 0;
+      let totalPossible = 0;
+      
+      // Calculate for each day in the week
+      for (let day = 0; day < 7; day++) {
+        const currentDay = new Date(weekStart);
+        currentDay.setDate(weekStart.getDate() + day);
+        const dateStr = currentDay.toISOString().split('T')[0];
+        
+        habits.forEach(habit => {
+          if (habit.completions) {
+            const dayCompletion = habit.completions.find(c => c.date === dateStr);
+            if (dayCompletion) {
+              totalPossible++;
+              if (dayCompletion.completed) {
+                totalCompletions++;
+              }
+            }
+          }
+        });
+      }
+      
+      const rate = totalPossible > 0 ? Math.round((totalCompletions / totalPossible) * 100) : 0;
+      weeks.push({ week: `Week ${12-i}`, rate });
+    }
+    return weeks;
+  };
 
   // Generate weekly data based on actual completion days
   const generateWeeklyData = () => {
@@ -72,35 +106,6 @@ const Analytics = () => {
     });
   };
 
-  const generateCompletionRateData = () => {
-    const weeks = [];
-    for (let i = 5; i >= 0; i--) {
-      const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - (i * 7));
-      
-      let weekCompletions = 0;
-      let weekTotal = 0;
-      
-      habits.forEach(habit => {
-        if (habit.completions) {
-          const weekHabitCompletions = habit.completions.filter(completion => {
-            const completionDate = new Date(completion.date);
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekStart.getDate() + 6);
-            return completionDate >= weekStart && completionDate <= weekEnd;
-          });
-          
-          weekCompletions += weekHabitCompletions.filter(c => c.completed).length;
-          weekTotal += weekHabitCompletions.length;
-        }
-      });
-      
-      const rate = weekTotal > 0 ? Math.round((weekCompletions / weekTotal) * 100) : 0;
-      weeks.push({ week: `Week ${6-i}`, rate });
-    }
-    return weeks;
-  };
-
   // Generate time of day data based on actual completion times
   const generateTimeOfDayData = () => {
     const timeSlots = [
@@ -117,26 +122,21 @@ const Analytics = () => {
 
     return timeSlots.map(slot => {
       let completionsInSlot = 0;
-      let totalCompletions = 0;
 
       habits.forEach(habit => {
         if (habit.completions) {
           habit.completions.forEach(completion => {
-            if (completion.completed) {
-              totalCompletions++;
-              if (completion.completionTime) {
-                const [hours] = completion.completionTime.split(':').map(Number);
-                if (hours >= slot.start && hours < slot.end) {
-                  completionsInSlot++;
-                }
+            if (completion.completed && completion.completionTime) {
+              const [hours] = completion.completionTime.split(':').map(Number);
+              if (hours >= slot.start && hours < slot.end) {
+                completionsInSlot++;
               }
             }
           });
         }
       });
 
-      const rate = totalCompletions > 0 ? Math.round((completionsInSlot / totalCompletions) * 100) : 0;
-      return { time: slot.label, rate };
+      return { time: slot.label, completions: completionsInSlot };
     });
   };
 
@@ -177,7 +177,7 @@ const Analytics = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>Completion Rate Trend</CardTitle>
+              <CardTitle>7-Day Average Completion Rate</CardTitle>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-80">
@@ -192,7 +192,7 @@ const Analytics = () => {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                    domain={['0', '100']}
+                    domain={[0, 100]}
                     tickFormatter={(value) => `${value}%`}
                   />
                   <ChartTooltip 
@@ -213,7 +213,7 @@ const Analytics = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Success Rate by Time of Day</CardTitle>
+              <CardTitle>Completions by Time of Day</CardTitle>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-80">
@@ -228,15 +228,15 @@ const Analytics = () => {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                    domain={['0', '100']}
-                    tickFormatter={(value) => `${value}%`}
+                    domain={[0, 'dataMax']}
+                    tickFormatter={(value) => Math.round(value).toString()}
                   />
                   <ChartTooltip 
                     content={<ChartTooltipContent />}
-                    formatter={(value) => [`${value}%`, 'Success Rate']}
+                    formatter={(value) => [Math.round(value as number), 'Completions']}
                   />
                   <Bar 
-                    dataKey="rate" 
+                    dataKey="completions" 
                     fill="#3B82F6" 
                     radius={[4, 4, 0, 0]}
                     maxBarSize={40}
@@ -249,7 +249,7 @@ const Analytics = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Weekly Progress Overview</CardTitle>
+            <CardTitle>Weekly Completion Pattern</CardTitle>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-80">

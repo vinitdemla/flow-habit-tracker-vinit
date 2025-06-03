@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -19,7 +20,7 @@ export const Header = () => {
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="container mx-auto flex items-center justify-between">
         <button 
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/dashboard')}
           className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
         >
           HabitFlow
