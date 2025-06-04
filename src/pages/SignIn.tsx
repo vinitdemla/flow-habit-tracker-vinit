@@ -9,9 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 
 const SignIn = () => {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -19,23 +16,23 @@ const SignIn = () => {
     e.preventDefault();
     
     // Basic validation
-    if (!email || !password || (isSignUp && !name)) {
+    if (!name.trim()) {
       toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields.",
+        title: "Missing name",
+        description: "Please enter your name to continue.",
         variant: "destructive",
       });
       return;
     }
 
     // Save user data to localStorage
-    localStorage.setItem('userName', name || 'Guest User');
-    localStorage.setItem('userEmail', email);
+    localStorage.setItem('userName', name.trim());
+    localStorage.setItem('userEmail', 'user@habitflow.com');
     localStorage.setItem('isLoggedIn', 'true');
 
     toast({
-      title: isSignUp ? "Account created!" : "Welcome back!",
-      description: `${isSignUp ? 'Account created successfully' : 'Signed in successfully'} as ${name || email}`,
+      title: "Welcome to HabitFlow!",
+      description: `Hello ${name}, let's start building your habits!`,
     });
 
     // Navigate to dashboard
@@ -44,12 +41,12 @@ const SignIn = () => {
 
   const handleGuestLogin = () => {
     localStorage.setItem('userName', 'Guest User');
-    localStorage.setItem('userEmail', 'guest@example.com');
+    localStorage.setItem('userEmail', 'guest@habitflow.com');
     localStorage.setItem('isLoggedIn', 'true');
     
     toast({
-      title: "Guest access",
-      description: "Signed in as guest user",
+      title: "Welcome Guest!",
+      description: "Let's start tracking your habits!",
     });
     
     navigate('/dashboard');
@@ -75,48 +72,22 @@ const SignIn = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-blue-600 mb-2">
-            {isSignUp ? 'Create Account' : 'Welcome to HabitFlow'}
+            Welcome to HabitFlow
           </CardTitle>
           <p className="text-gray-600">
-            {isSignUp ? 'Sign up to start tracking your habits' : 'Sign in to continue tracking your habits'}
+            Enter your name to start tracking your habits
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-            
             <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="name">Your Name</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                id="name"
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
               />
             </div>
@@ -125,24 +96,14 @@ const SignIn = () => {
               type="submit" 
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
-              {isSignUp ? 'Create Account' : 'Sign In'}
+              Start My Habit Journey
             </Button>
           </form>
 
-          <div className="text-center mt-6 space-y-2">
-            <a href="#" className="text-blue-600 hover:underline text-sm">
-              Forgot your password?
-            </a>
-            <div className="text-sm text-gray-600">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-              <button 
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-blue-600 hover:underline"
-              >
-                {isSignUp ? 'Sign in' : 'Sign up'}
-              </button>
-            </div>
+          <div className="text-center mt-6">
+            <p className="text-xs text-gray-500">
+              Your data will be stored locally in your browser
+            </p>
           </div>
         </CardContent>
       </Card>
