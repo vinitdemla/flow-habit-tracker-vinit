@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus, Target, TrendingUp, Calendar, Trophy, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,36 +40,60 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'all'>('pending');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  // Initialize today's date tracking
+  // Initialize today's date tracking and load habits
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     
-    // Load habits from localStorage
     const storedHabits = localStorage.getItem('habits');
     if (storedHabits) {
       const parsedHabits = JSON.parse(storedHabits);
       
-      // Ensure each habit has today's entry initialized
       const updatedHabits = parsedHabits.map((habit: Habit) => {
         const completions = habit.completions || [];
-        const hasToday = completions.some(c => c.date === today);
         
+        // Ensure today's entry exists
+        const hasToday = completions.some(c => c.date === today);
         if (!hasToday) {
-          // Add today's entry as not completed
           completions.push({
             date: today,
             completed: false
           });
         }
         
-        // Update completedToday based on today's completion
+        // Update completedToday status
         const todayCompletion = completions.find(c => c.date === today);
         const completedToday = todayCompletion?.completed || false;
+        
+        // Recalculate streak properly
+        let streak = 0;
+        if (completedToday) {
+          const sortedCompletions = completions
+            .filter(c => c.completed)
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          
+          for (let i = 0; i < sortedCompletions.length; i++) {
+            const completionDate = new Date(sortedCompletions[i].date);
+            const expectedDate = new Date(today);
+            expectedDate.setDate(expectedDate.getDate() - i);
+            
+            if (completionDate.toDateString() === expectedDate.toDateString()) {
+              streak++;
+            } else {
+              break;
+            }
+          }
+        }
+        
+        // Recalculate completed days
+        const completedDays = completions.filter(c => c.completed).length;
         
         return {
           ...habit,
           completions,
-          completedToday
+          completedToday,
+          streak,
+          completedDays,
+          totalDays: Math.max(completions.length, habit.totalDays || 1)
         };
       });
       
@@ -78,10 +103,13 @@ const Dashboard = () => {
 
   // Save habits to localStorage whenever habits change
   useEffect(() => {
-    localStorage.setItem('habits', JSON.stringify(habits));
+    if (habits.length > 0) {
+      localStorage.setItem('habits', JSON.stringify(habits));
+    }
   }, [habits]);
 
   const addHabit = (newHabit: Omit<Habit, 'id' | 'streak' | 'completedToday' | 'totalDays' | 'completedDays' | 'completions'>) => {
+    const today = new Date().toISOString().split('T')[0];
     const habit: Habit = {
       ...newHabit,
       id: Date.now().toString(),
@@ -89,7 +117,10 @@ const Dashboard = () => {
       completedToday: false,
       totalDays: 1,
       completedDays: 0,
-      completions: []
+      completions: [{
+        date: today,
+        completed: false
+      }]
     };
     setHabits(prev => [...prev, habit]);
   };
@@ -106,36 +137,32 @@ const Dashboard = () => {
         const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         
         const newCompletedToday = !habit.completedToday;
-        const newCompletedDays = newCompletedToday ? habit.completedDays + 1 : Math.max(0, habit.completedDays - 1);
-        const newTotalDays = Math.max(habit.totalDays, newCompletedDays);
         
         // Update completions array
-        const completions = habit.completions || [];
+        const completions = [...(habit.completions || [])];
         const existingCompletionIndex = completions.findIndex(c => c.date === today);
         
-        let updatedCompletions;
         if (existingCompletionIndex >= 0) {
-          // Update existing completion
-          updatedCompletions = [...completions];
-          updatedCompletions[existingCompletionIndex] = {
-            ...updatedCompletions[existingCompletionIndex],
+          completions[existingCompletionIndex] = {
+            ...completions[existingCompletionIndex],
             completed: newCompletedToday,
             completionTime: newCompletedToday ? currentTime : undefined
           };
         } else {
-          // Add new completion
-          updatedCompletions = [...completions, {
+          completions.push({
             date: today,
             completed: newCompletedToday,
             completionTime: newCompletedToday ? currentTime : undefined
-          }];
+          });
         }
+        
+        // Recalculate completed days
+        const newCompletedDays = completions.filter(c => c.completed).length;
         
         // Calculate streak properly
         let newStreak = 0;
         if (newCompletedToday) {
-          // Count consecutive days from today backwards
-          const sortedCompletions = updatedCompletions
+          const sortedCompletions = completions
             .filter(c => c.completed)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           
@@ -144,7 +171,7 @@ const Dashboard = () => {
             const expectedDate = new Date(today);
             expectedDate.setDate(expectedDate.getDate() - i);
             
-            if (completionDate.toISOString().split('T')[0] === expectedDate.toISOString().split('T')[0]) {
+            if (completionDate.toDateString() === expectedDate.toDateString()) {
               newStreak++;
             } else {
               break;
@@ -156,9 +183,9 @@ const Dashboard = () => {
           ...habit,
           completedToday: newCompletedToday,
           completedDays: newCompletedDays,
-          totalDays: newTotalDays,
+          totalDays: Math.max(completions.length, habit.totalDays),
           streak: newStreak,
-          completions: updatedCompletions
+          completions
         };
       }
       return habit;
@@ -170,14 +197,11 @@ const Dashboard = () => {
     setIsHeatmapOpen(true);
   };
 
-  // Calculate real statistics based on actual habit data
+  // Calculate statistics
   const completedToday = habits.filter(h => h.completedToday).length;
   const totalHabits = habits.length;
-  
-  // Calculate average completion rate (use 75% as realistic baseline)
   const averageCompletionRate = totalHabits > 0 ? 
-    Math.round(((completedToday / totalHabits) * 0.3 + 0.75) * 100) : 75;
-  
+    Math.round((habits.reduce((acc, h) => acc + (h.completedDays / Math.max(h.totalDays, 1)), 0) / totalHabits) * 100) : 0;
   const currentStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
   const totalCheckIns = habits.reduce((sum, h) => sum + h.completedDays, 0);
 
@@ -187,12 +211,10 @@ const Dashboard = () => {
   const getDisplayedHabits = () => {
     let filtered = habits;
     
-    // Filter by category
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(h => h.category === categoryFilter);
     }
     
-    // Filter by completion status
     switch (activeTab) {
       case 'pending':
         return filtered.filter(h => !h.completedToday);
@@ -215,7 +237,7 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 sm:mb-8">Dashboard</h1>
 
-        {/* Stats Cards - Mobile Responsive Grid */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <StatsCard
             title="Total Habits"
@@ -229,7 +251,7 @@ const Dashboard = () => {
             title="Avg. Rate"
             value={`${averageCompletionRate}%`}
             icon={<TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />}
-            description="Weekly completion"
+            description="Overall completion"
             gradient="from-green-500 to-green-600"
           />
 
@@ -257,10 +279,10 @@ const Dashboard = () => {
             <HabitTemplates onSelectTemplate={addHabitFromTemplate} />
             <Button 
               onClick={() => setIsAddDialogOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white w-full sm:w-auto"
+              className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
               size="sm"
             >
-              <Plus className="h-4 w-4 mr-2 text-white" />
+              <Plus className="h-4 w-4 mr-2" />
               Add New Habit
             </Button>
           </div>
@@ -270,7 +292,7 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex space-x-4 sm:space-x-8 border-b border-gray-200 dark:border-gray-700 overflow-x-auto pb-2 flex-1">
             <button 
-              className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base ${
+              className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base transition-colors ${
                 activeTab === 'pending' 
                   ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
                   : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -280,7 +302,7 @@ const Dashboard = () => {
               Pending ({pendingHabits.length})
             </button>
             <button 
-              className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base ${
+              className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base transition-colors ${
                 activeTab === 'completed' 
                   ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
                   : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -290,7 +312,7 @@ const Dashboard = () => {
               Completed ({completedHabits.length})
             </button>
             <button 
-              className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base ${
+              className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base transition-colors ${
                 activeTab === 'all' 
                   ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
                   : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -302,13 +324,13 @@ const Dashboard = () => {
           </div>
           
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full sm:w-48 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
+            <SelectTrigger className="w-full sm:w-48">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
-            <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+            <SelectContent>
               {categories.map(category => (
-                <SelectItem key={category} value={category} className="dark:text-gray-100 dark:hover:bg-gray-700">
+                <SelectItem key={category} value={category}>
                   {category === 'all' ? 'All Categories' : category}
                 </SelectItem>
               ))}
@@ -326,8 +348,8 @@ const Dashboard = () => {
         ) : (
           <div className="space-y-3 sm:space-y-4">
             {displayedHabits.map((habit) => (
-              <Card key={habit.id} className={`hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700 ${
-                habit.completedToday ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : ''
+              <Card key={habit.id} className={`hover:shadow-md transition-all duration-200 ${
+                habit.completedToday ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'hover:shadow-lg'
               }`}>
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -338,36 +360,36 @@ const Dashboard = () => {
                         <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                           <span className="flex items-center">
                             <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            {habit.streak}
+                            {habit.streak} day streak
                           </span>
-                          <Badge variant="outline" className="text-xs dark:border-gray-600 dark:text-gray-300">{habit.frequency}</Badge>
+                          <Badge variant="outline" className="text-xs">{habit.frequency}</Badge>
                           <span className="hidden sm:inline">{habit.completedDays}/{habit.totalDays} completed</span>
                         </div>
                         <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {habit.completedDays}/{habit.totalDays} completed
+                          {habit.completedDays}/{habit.totalDays} completed ({Math.round((habit.completedDays / Math.max(habit.totalDays, 1)) * 100)}%)
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3">
-                      {!habit.completedToday && activeTab === 'pending' && (
+                      {!habit.completedToday && activeTab !== 'completed' && (
                         <Button 
                           onClick={() => toggleHabitCompletion(habit.id)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white flex-1 sm:flex-none"
+                          className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none"
                           size="sm"
                         >
                           Complete
                         </Button>
                       )}
                       {habit.completedToday && (
-                        <Badge className="bg-green-600 text-white dark:bg-green-600 dark:text-white">Completed</Badge>
+                        <Badge className="bg-green-600 text-white">✓ Completed</Badge>
                       )}
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => openHeatmap(habit)}
-                        className="whitespace-nowrap dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
+                        className="whitespace-nowrap"
                       >
-                        Details
+                        View Details
                       </Button>
                     </div>
                   </div>
