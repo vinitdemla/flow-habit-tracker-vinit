@@ -1,14 +1,11 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronDown } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface AddHabitDialogProps {
   open: boolean;
@@ -17,202 +14,157 @@ interface AddHabitDialogProps {
     name: string;
     description: string;
     category: string;
+    difficulty: 'Easy' | 'Medium' | 'Hard';
     icon: string;
+    frequency: string;
+    customDays?: string[];
   }) => void;
 }
 
-const habitIcons = [
-  '💪', '🔥', '📚', '💧', '🏃‍♂️', '🍎', '🎯', '🧘‍♂️', '🥗', '🎵',
-  '🌱', '🧠', '💝', '💎', '📝', '🏋️‍♂️', '🍌', '🚶‍♂️', '🚭', '⚡',
-  '🌟', '🎨', '💻', '📱', '🎮', '🛏️', '🌅', '🌙', '☕', '🍃',
-  '🎪', '🎭', '🎬', '📖', '✍️', '🔬', '🎯', '🏆', '🎊', '🎈'
-];
-
-const daysOfWeek = [
-  { id: 'monday', label: 'Monday' },
-  { id: 'tuesday', label: 'Tuesday' },
-  { id: 'wednesday', label: 'Wednesday' },
-  { id: 'thursday', label: 'Thursday' },
-  { id: 'friday', label: 'Friday' },
-  { id: 'saturday', label: 'Saturday' },
-  { id: 'sunday', label: 'Sunday' }
-];
-
 export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialogProps) => {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState('💪');
-  const [frequency, setFrequency] = useState('Daily');
-  const [customDays, setCustomDays] = useState<string[]>([]);
-  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    category: 'Health',
+    difficulty: 'Medium' as 'Easy' | 'Medium' | 'Hard',
+    icon: '💪',
+    frequency: 'daily',
+    customDays: [] as string[]
+  });
+
+  const icons = ['💪', '🏃‍♂️', '🧘‍♀️', '📚', '🎨', '🎵', '🌱', '🍳', '🤝', '💡'];
+  const categories = ['Health', 'Personal', 'Productivity', 'Finance', 'Social'];
+  const frequencies = ['daily', 'weekly', 'monthly', 'custom'];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!name.trim() || !category) return;
-
-    onAddHabit({
-      name: name.trim(),
-      description: description.trim(),
-      category,
-      icon: selectedIcon
-    });
-
-    // Reset form
-    setName('');
-    setDescription('');
-    setCategory('');
-    setSelectedIcon('💪');
-    setFrequency('Daily');
-    setCustomDays([]);
-    onOpenChange(false);
+    if (formData.name.trim()) {
+      onAddHabit(formData);
+      setFormData({
+        name: '',
+        description: '',
+        category: 'Health',
+        difficulty: 'Medium',
+        icon: '💪',
+        frequency: 'daily',
+        customDays: []
+      });
+      onOpenChange(false);
+    }
   };
 
-  const handleCustomDayToggle = (dayId: string) => {
-    setCustomDays(prev => 
-      prev.includes(dayId) 
-        ? prev.filter(id => id !== dayId)
-        : [...prev, dayId]
-    );
+  const getDifficultyDescription = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy': return 'Simple to maintain, low effort required';
+      case 'Medium': return 'Moderate effort, balanced challenge';
+      case 'Hard': return 'High effort, significant commitment';
+      default: return '';
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create New Habit</DialogTitle>
-          <p className="text-sm text-gray-500">Add a new habit to track</p>
+          <DialogTitle>Add New Habit</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter habit name"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Icon</Label>
-              <Popover open={isIconPickerOpen} onOpenChange={setIsIconPickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start text-left"
-                  >
-                    <span className="text-lg mr-2">{selectedIcon}</span>
-                    <span className="text-sm text-gray-500 flex-1">Choose icon</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-3" align="start">
-                  <div className="grid grid-cols-8 gap-2">
-                    {habitIcons.map((icon, index) => (
-                      <Button
-                        key={index}
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-lg h-10 w-10 p-0 hover:bg-gray-100"
-                        onClick={() => {
-                          setSelectedIcon(icon);
-                          setIsIconPickerOpen(false);
-                        }}
-                      >
-                        {icon}
-                      </Button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Name */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Habit Name</Label>
+            <Input
+              id="name"
+              placeholder="Drink Water"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              required
+            />
           </div>
 
+          {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter habit description (optional)"
-              rows={2}
+              placeholder="Make sure to drink 8 glasses of water each day"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             />
           </div>
 
+          {/* Category */}
           <div className="space-y-2">
-            <Label>Frequency</Label>
-            <Select value={frequency} onValueChange={setFrequency}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Daily">Daily</SelectItem>
-                <SelectItem value="Weekly">Weekly</SelectItem>
-                <SelectItem value="Custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {frequency === 'Custom' && (
-            <div className="space-y-3">
-              <Label>Custom Days</Label>
-              <div className="grid grid-cols-2 gap-3">
-                {daysOfWeek.map((day) => (
-                  <div key={day.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={day.id}
-                      checked={customDays.includes(day.id)}
-                      onCheckedChange={() => handleCustomDayToggle(day.id)}
-                    />
-                    <Label htmlFor={day.id} className="text-sm font-normal">
-                      {day.label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Category</Label>
-            <Select value={category} onValueChange={setCategory}>
+            <Label htmlFor="category">Category</Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Health">Health</SelectItem>
-                <SelectItem value="Personal">Personal</SelectItem>
-                <SelectItem value="Productivity">Productivity</SelectItem>
-                <SelectItem value="Fitness">Fitness</SelectItem>
-                <SelectItem value="Learning">Learning</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-              disabled={!name.trim() || !category}
-            >
-              Create
-            </Button>
+          {/* Icon */}
+          <div className="space-y-2">
+            <Label>Icon</Label>
+            <div className="flex gap-2">
+              {icons.map(icon => (
+                <Button
+                  key={icon}
+                  variant="outline"
+                  className={`w-10 h-10 ${formData.icon === icon ? 'bg-secondary' : ''}`}
+                  onClick={() => setFormData(prev => ({ ...prev, icon: icon }))}
+                >
+                  <span className="text-xl">{icon}</span>
+                </Button>
+              ))}
+            </div>
           </div>
+
+          {/* Difficulty Level */}
+          <div className="space-y-3">
+            <Label>Difficulty Level</Label>
+            <RadioGroup
+              value={formData.difficulty}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value as 'Easy' | 'Medium' | 'Hard' }))}
+              className="grid grid-cols-3 gap-4"
+            >
+              {['Easy', 'Medium', 'Hard'].map((difficulty) => (
+                <div key={difficulty} className="flex items-center space-x-2">
+                  <RadioGroupItem value={difficulty} id={difficulty} />
+                  <Label htmlFor={difficulty} className="text-sm">
+                    <div className="font-medium">{difficulty}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {getDifficultyDescription(difficulty)}
+                    </div>
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+
+          {/* Frequency */}
+          <div className="space-y-2">
+            <Label htmlFor="frequency">Frequency</Label>
+            <Select value={formData.frequency} onValueChange={(value) => setFormData(prev => ({ ...prev, frequency: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select frequency" />
+              </SelectTrigger>
+              <SelectContent>
+                {frequencies.map(frequency => (
+                  <SelectItem key={frequency} value={frequency}>{frequency}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button type="submit" className="w-full">
+            Add Habit
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

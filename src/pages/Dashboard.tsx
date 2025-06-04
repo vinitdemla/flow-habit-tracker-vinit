@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Target, TrendingUp, Calendar, Trophy, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,12 +8,19 @@ import { AddHabitDialog } from '@/components/AddHabitDialog';
 import { HeatmapModal } from '@/components/HeatmapModal';
 import { StatsCard } from '@/components/StatsCard';
 import { HabitTemplates } from '@/components/HabitTemplates';
+import { ExportData } from '@/components/ExportData';
+import { AchievementBadges } from '@/components/AchievementBadges';
+import { Goals } from '@/components/Goals';
+import { HabitReminders } from '@/components/HabitReminders';
+import { HabitAnalytics } from '@/components/HabitAnalytics';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface HabitCompletion {
   date: string;
   completed: boolean;
   completionTime?: string;
+  note?: string;
 }
 
 interface Habit {
@@ -22,6 +28,7 @@ interface Habit {
   name: string;
   description: string;
   category: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
   streak: number;
   completedToday: boolean;
   totalDays: number;
@@ -39,6 +46,8 @@ const Dashboard = () => {
   const [isHeatmapOpen, setIsHeatmapOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'all'>('pending');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
+  const [completionNote, setCompletionNote] = useState<string>('');
 
   // Initialize today's date tracking and load habits
   useEffect(() => {
@@ -112,6 +121,7 @@ const Dashboard = () => {
     const today = new Date().toISOString().split('T')[0];
     const habit: Habit = {
       ...newHabit,
+      difficulty: newHabit.difficulty || 'Medium',
       id: Date.now().toString(),
       streak: 0,
       completedToday: false,
@@ -129,7 +139,7 @@ const Dashboard = () => {
     addHabit(template);
   };
 
-  const toggleHabitCompletion = (habitId: string) => {
+  const toggleHabitCompletion = (habitId: string, note?: string) => {
     setHabits(prev => prev.map(habit => {
       if (habit.id === habitId) {
         const today = new Date().toISOString().split('T')[0];
@@ -146,13 +156,15 @@ const Dashboard = () => {
           completions[existingCompletionIndex] = {
             ...completions[existingCompletionIndex],
             completed: newCompletedToday,
-            completionTime: newCompletedToday ? currentTime : undefined
+            completionTime: newCompletedToday ? currentTime : undefined,
+            note: newCompletedToday ? note : undefined
           };
         } else {
           completions.push({
             date: today,
             completed: newCompletedToday,
-            completionTime: newCompletedToday ? currentTime : undefined
+            completionTime: newCompletedToday ? currentTime : undefined,
+            note: newCompletedToday ? note : undefined
           });
         }
         
@@ -197,22 +209,20 @@ const Dashboard = () => {
     setIsHeatmapOpen(true);
   };
 
-  // Calculate statistics
+  // Calculate simplified statistics (removed redundant ones)
   const completedToday = habits.filter(h => h.completedToday).length;
   const totalHabits = habits.length;
-  const averageCompletionRate = totalHabits > 0 ? 
-    Math.round((habits.reduce((acc, h) => acc + (h.completedDays / Math.max(h.totalDays, 1)), 0) / totalHabits) * 100) : 0;
   const currentStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
-  const totalCheckIns = habits.reduce((sum, h) => sum + h.completedDays, 0);
-
-  const pendingHabits = habits.filter(h => !h.completedToday);
-  const completedHabits = habits.filter(h => h.completedToday);
 
   const getDisplayedHabits = () => {
     let filtered = habits;
     
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(h => h.category === categoryFilter);
+    }
+    
+    if (difficultyFilter !== 'all') {
+      filtered = filtered.filter(h => h.difficulty === difficultyFilter);
     }
     
     switch (activeTab) {
@@ -229,6 +239,16 @@ const Dashboard = () => {
 
   const displayedHabits = getDisplayedHabits();
   const categories = ['all', ...Array.from(new Set(habits.map(h => h.category)))];
+  const difficulties = ['all', 'Easy', 'Medium', 'Hard'];
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy': return 'bg-green-100 text-green-800';
+      case 'Medium': return 'bg-yellow-100 text-yellow-800';
+      case 'Hard': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -237,8 +257,8 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 sm:mb-8">Dashboard</h1>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+        {/* Simplified Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <StatsCard
             title="Total Habits"
             value={totalHabits.toString()}
@@ -248,10 +268,10 @@ const Dashboard = () => {
           />
           
           <StatsCard
-            title="Avg. Rate"
-            value={`${averageCompletionRate}%`}
-            icon={<TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />}
-            description="Overall completion"
+            title="Completed Today"
+            value={`${completedToday}/${totalHabits}`}
+            icon={<Calendar className="h-5 w-5 sm:h-6 sm:w-6" />}
+            description="Daily progress"
             gradient="from-green-500 to-green-600"
           />
 
@@ -262,142 +282,184 @@ const Dashboard = () => {
             description="Days in a row"
             gradient="from-yellow-500 to-orange-500"
           />
-
-          <StatsCard
-            title="Check-ins"
-            value={totalCheckIns.toString()}
-            icon={<Calendar className="h-5 w-5 sm:h-6 sm:w-6" />}
-            description="Total completions"
-            gradient="from-purple-500 to-purple-600"
-          />
         </div>
 
-        {/* Your Habits Section */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Your Habits</h2>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <HabitTemplates onSelectTemplate={addHabitFromTemplate} />
-            <Button 
-              onClick={() => setIsAddDialogOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
-              size="sm"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Habit
-            </Button>
-          </div>
-        </div>
+        {/* Enhanced Features Tabs */}
+        <Tabs defaultValue="habits" className="mb-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="habits">Habits</TabsTrigger>
+            <TabsTrigger value="goals">Goals</TabsTrigger>
+            <TabsTrigger value="achievements">Badges</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="reminders">Reminders</TabsTrigger>
+            <TabsTrigger value="export">Export</TabsTrigger>
+          </TabsList>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex space-x-4 sm:space-x-8 border-b border-gray-200 dark:border-gray-700 overflow-x-auto pb-2 flex-1">
-            <button 
-              className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base transition-colors ${
-                activeTab === 'pending' 
-                  ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
-              onClick={() => setActiveTab('pending')}
-            >
-              Pending ({pendingHabits.length})
-            </button>
-            <button 
-              className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base transition-colors ${
-                activeTab === 'completed' 
-                  ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
-              onClick={() => setActiveTab('completed')}
-            >
-              Completed ({completedHabits.length})
-            </button>
-            <button 
-              className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base transition-colors ${
-                activeTab === 'all' 
-                  ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
-              onClick={() => setActiveTab('all')}
-            >
-              All ({totalHabits})
-            </button>
-          </div>
-          
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Filter by category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map(category => (
-                <SelectItem key={category} value={category}>
-                  {category === 'all' ? 'All Categories' : category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <TabsContent value="habits" className="space-y-6">
+            {/* Your Habits Section */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Your Habits</h2>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <HabitTemplates onSelectTemplate={addHabitFromTemplate} />
+                <Button 
+                  onClick={() => setIsAddDialogOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Habit
+                </Button>
+              </div>
+            </div>
 
-        {/* Habits List */}
-        {displayedHabits.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-              {totalHabits === 0 ? 'No habits created yet. Click "Add New Habit" to get started!' : 'No habits found in this category'}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3 sm:space-y-4">
-            {displayedHabits.map((habit) => (
-              <Card key={habit.id} className={`hover:shadow-md transition-all duration-200 ${
-                habit.completedToday ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'hover:shadow-lg'
-              }`}>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-start space-x-3 sm:space-x-4 flex-1">
-                      <div className="text-xl sm:text-2xl">{habit.icon}</div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-base sm:text-lg truncate text-gray-900 dark:text-gray-100">{habit.name}</h3>
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          <span className="flex items-center">
-                            <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            {habit.streak} day streak
-                          </span>
-                          <Badge variant="outline" className="text-xs">{habit.frequency}</Badge>
-                          <span className="hidden sm:inline">{habit.completedDays}/{habit.totalDays} completed</span>
+            {/* Enhanced Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="flex space-x-4 sm:space-x-8 border-b border-gray-200 dark:border-gray-700 overflow-x-auto pb-2 flex-1">
+                <button 
+                  className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base transition-colors ${
+                    activeTab === 'pending' 
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                  onClick={() => setActiveTab('pending')}
+                >
+                  Pending ({habits.filter(h => !h.completedToday).length})
+                </button>
+                <button 
+                  className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base transition-colors ${
+                    activeTab === 'completed' 
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                  onClick={() => setActiveTab('completed')}
+                >
+                  Completed ({habits.filter(h => h.completedToday).length})
+                </button>
+                <button 
+                  className={`pb-2 border-b-2 font-medium whitespace-nowrap text-sm sm:text-base transition-colors ${
+                    activeTab === 'all' 
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                  onClick={() => setActiveTab('all')}
+                >
+                  All ({totalHabits})
+                </button>
+              </div>
+              
+              <div className="flex gap-2">
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category === 'all' ? 'All Categories' : category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                  <SelectTrigger className="w-full sm:w-32">
+                    <SelectValue placeholder="Difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {difficulties.map(difficulty => (
+                      <SelectItem key={difficulty} value={difficulty}>
+                        {difficulty === 'all' ? 'All' : difficulty}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Habits List with Enhanced Features */}
+            {displayedHabits.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                  {totalHabits === 0 ? 'No habits created yet. Click "Add New Habit" to get started!' : 'No habits found with current filters'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 sm:space-y-4">
+                {displayedHabits.map((habit) => (
+                  <Card key={habit.id} className={`hover:shadow-md transition-all duration-200 ${
+                    habit.completedToday ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'hover:shadow-lg'
+                  }`}>
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-start space-x-3 sm:space-x-4 flex-1">
+                          <div className="text-xl sm:text-2xl">{habit.icon}</div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-base sm:text-lg truncate text-gray-900 dark:text-gray-100">{habit.name}</h3>
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              <span className="flex items-center">
+                                <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                                {habit.streak} day streak
+                              </span>
+                              <Badge variant="outline" className="text-xs">{habit.frequency}</Badge>
+                              <Badge className={getDifficultyColor(habit.difficulty)}>{habit.difficulty}</Badge>
+                              <span className="hidden sm:inline">{habit.completedDays}/{habit.totalDays} completed</span>
+                            </div>
+                            <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {habit.completedDays}/{habit.totalDays} completed ({Math.round((habit.completedDays / Math.max(habit.totalDays, 1)) * 100)}%)
+                            </div>
+                          </div>
                         </div>
-                        <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {habit.completedDays}/{habit.totalDays} completed ({Math.round((habit.completedDays / Math.max(habit.totalDays, 1)) * 100)}%)
+                        <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3">
+                          {!habit.completedToday && activeTab !== 'completed' && (
+                            <Button 
+                              onClick={() => toggleHabitCompletion(habit.id, completionNote)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none"
+                              size="sm"
+                            >
+                              Complete
+                            </Button>
+                          )}
+                          {habit.completedToday && (
+                            <Badge className="bg-green-600 text-white">✓ Completed</Badge>
+                          )}
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => openHeatmap(habit)}
+                            className="whitespace-nowrap"
+                          >
+                            View Details
+                          </Button>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3">
-                      {!habit.completedToday && activeTab !== 'completed' && (
-                        <Button 
-                          onClick={() => toggleHabitCompletion(habit.id)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none"
-                          size="sm"
-                        >
-                          Complete
-                        </Button>
-                      )}
-                      {habit.completedToday && (
-                        <Badge className="bg-green-600 text-white">✓ Completed</Badge>
-                      )}
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => openHeatmap(habit)}
-                        className="whitespace-nowrap"
-                      >
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="goals">
+            <Goals habits={habits} />
+          </TabsContent>
+
+          <TabsContent value="achievements">
+            <AchievementBadges habits={habits} />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <HabitAnalytics habits={habits} />
+          </TabsContent>
+
+          <TabsContent value="reminders">
+            <HabitReminders habits={habits} />
+          </TabsContent>
+
+          <TabsContent value="export">
+            <ExportData habits={habits} />
+          </TabsContent>
+        </Tabs>
 
         <AddHabitDialog
           open={isAddDialogOpen}
