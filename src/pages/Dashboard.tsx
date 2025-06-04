@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus, Target, TrendingUp, Calendar, Trophy, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Header } from '@/components/Header';
 import { AddHabitDialog } from '@/components/AddHabitDialog';
-import { HeatmapModal } from '@/components/HeatmapModal';
 import { StatsCard } from '@/components/StatsCard';
 import { HabitTemplates } from '@/components/HabitTemplates';
 import { ExportData } from '@/components/ExportData';
@@ -42,12 +42,9 @@ interface Habit {
 const Dashboard = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
-  const [isHeatmapOpen, setIsHeatmapOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'all'>('pending');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
-  const [completionNote, setCompletionNote] = useState<string>('');
 
   // Initialize today's date tracking and load habits
   useEffect(() => {
@@ -117,11 +114,18 @@ const Dashboard = () => {
     }
   }, [habits]);
 
-  const addHabit = (newHabit: Omit<Habit, 'id' | 'streak' | 'completedToday' | 'totalDays' | 'completedDays' | 'completions'>) => {
+  const addHabit = (newHabit: {
+    name: string;
+    description: string;
+    category: string;
+    difficulty: 'Easy' | 'Medium' | 'Hard';
+    icon: string;
+    frequency: string;
+    customDays?: string[];
+  }) => {
     const today = new Date().toISOString().split('T')[0];
     const habit: Habit = {
       ...newHabit,
-      difficulty: newHabit.difficulty || 'Medium',
       id: Date.now().toString(),
       streak: 0,
       completedToday: false,
@@ -204,12 +208,7 @@ const Dashboard = () => {
     }));
   };
 
-  const openHeatmap = (habit: Habit) => {
-    setSelectedHabit(habit);
-    setIsHeatmapOpen(true);
-  };
-
-  // Calculate simplified statistics (removed redundant ones)
+  // Calculate simplified statistics
   const completedToday = habits.filter(h => h.completedToday).length;
   const totalHabits = habits.length;
   const currentStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
@@ -257,7 +256,7 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6 sm:mb-8">Dashboard</h1>
 
-        {/* Simplified Stats Cards */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <StatsCard
             title="Total Habits"
@@ -377,7 +376,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Habits List with Enhanced Features */}
+            {/* Habits List */}
             {displayedHabits.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
@@ -413,7 +412,7 @@ const Dashboard = () => {
                         <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3">
                           {!habit.completedToday && activeTab !== 'completed' && (
                             <Button 
-                              onClick={() => toggleHabitCompletion(habit.id, completionNote)}
+                              onClick={() => toggleHabitCompletion(habit.id)}
                               className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none"
                               size="sm"
                             >
@@ -423,14 +422,6 @@ const Dashboard = () => {
                           {habit.completedToday && (
                             <Badge className="bg-green-600 text-white">✓ Completed</Badge>
                           )}
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => openHeatmap(habit)}
-                            className="whitespace-nowrap"
-                          >
-                            View Details
-                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -466,14 +457,6 @@ const Dashboard = () => {
           onOpenChange={setIsAddDialogOpen}
           onAddHabit={addHabit}
         />
-
-        {selectedHabit && (
-          <HeatmapModal
-            open={isHeatmapOpen}
-            onOpenChange={setIsHeatmapOpen}
-            habit={selectedHabit}
-          />
-        )}
       </div>
     </div>
   );
