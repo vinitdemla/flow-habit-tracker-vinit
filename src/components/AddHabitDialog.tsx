@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -64,7 +65,7 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto mx-auto my-4">
         <DialogHeader>
           <DialogTitle>Add New Habit</DialogTitle>
         </DialogHeader>
@@ -90,6 +91,7 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
               placeholder="Make sure to drink 8 glasses of water each day"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              rows={3}
             />
           </div>
 
@@ -111,12 +113,13 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
           {/* Icon */}
           <div className="space-y-2">
             <Label>Icon</Label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-5 gap-2">
               {icons.map(icon => (
                 <Button
                   key={icon}
+                  type="button"
                   variant="outline"
-                  className={`w-10 h-10 ${formData.icon === icon ? 'bg-secondary' : ''}`}
+                  className={`w-full h-12 ${formData.icon === icon ? 'bg-blue-100 border-blue-500' : ''}`}
                   onClick={() => setFormData(prev => ({ ...prev, icon: icon }))}
                 >
                   <span className="text-xl">{icon}</span>
@@ -131,17 +134,19 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
             <RadioGroup
               value={formData.difficulty}
               onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value as 'Easy' | 'Medium' | 'Hard' }))}
-              className="grid grid-cols-3 gap-4"
+              className="space-y-3"
             >
               {['Easy', 'Medium', 'Hard'].map((difficulty) => (
-                <div key={difficulty} className="flex items-center space-x-2">
-                  <RadioGroupItem value={difficulty} id={difficulty} />
-                  <Label htmlFor={difficulty} className="text-sm">
-                    <div className="font-medium">{difficulty}</div>
-                    <div className="text-xs text-muted-foreground">
+                <div key={difficulty} className="flex items-start space-x-2">
+                  <RadioGroupItem value={difficulty} id={difficulty} className="mt-1" />
+                  <div className="flex-1">
+                    <Label htmlFor={difficulty} className="text-sm font-medium">
+                      {difficulty}
+                    </Label>
+                    <p className="text-xs text-gray-500 mt-1">
                       {getDifficultyDescription(difficulty)}
-                    </div>
-                  </Label>
+                    </p>
+                  </div>
                 </div>
               ))}
             </RadioGroup>
@@ -156,7 +161,9 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
               </SelectTrigger>
               <SelectContent>
                 {frequencies.map(frequency => (
-                  <SelectItem key={frequency} value={frequency}>{frequency}</SelectItem>
+                  <SelectItem key={frequency} value={frequency}>
+                    {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

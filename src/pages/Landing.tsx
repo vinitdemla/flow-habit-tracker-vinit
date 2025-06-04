@@ -14,11 +14,11 @@ const Landing = () => {
       description: "Build consistency with our intuitive habit tracking tools designed for your lifestyle."
     },
     {
-      title: "Beautiful habit heatmaps", 
-      description: "Visualize your progress with stunning heatmaps that show your habit completion patterns."
+      title: "Beautiful habit analytics", 
+      description: "Visualize your progress with stunning analytics that show your habit completion patterns."
     },
     {
-      title: "Detailed analytics and insights",
+      title: "Detailed insights and reports",
       description: "Get comprehensive insights into your habits with detailed analytics and progress reports."
     },
     {
@@ -43,11 +43,10 @@ const Landing = () => {
           HabitRise
         </div>
         <Button 
-          variant="outline" 
-          onClick={() => navigate('/signin')}
-          className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 border-blue-600 dark:border-blue-600"
+          onClick={() => navigate('/dashboard')}
+          className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
         >
-          Sign In
+          Get Started
         </Button>
       </header>
 
@@ -71,7 +70,7 @@ const Landing = () => {
 
         <Button 
           size="lg" 
-          onClick={() => navigate('/signin')}
+          onClick={() => navigate('/dashboard')}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg dark:bg-blue-600 dark:hover:bg-blue-700"
         >
           Get Started →
