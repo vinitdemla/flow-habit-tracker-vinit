@@ -36,6 +36,30 @@ export const HabitReminders = ({ habits }: HabitRemindersProps) => {
     localStorage.setItem('habit-reminders', JSON.stringify(updatedReminders));
   };
 
+  // Convert 24-hour time to 12-hour AM/PM format
+  const formatTime12Hour = (time24: string) => {
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  // Convert 12-hour time back to 24-hour format
+  const formatTime24Hour = (time12: string) => {
+    const [time, ampm] = time12.split(' ');
+    const [hours, minutes] = time.split(':');
+    let hour = parseInt(hours);
+    
+    if (ampm === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (ampm === 'AM' && hour === 12) {
+      hour = 0;
+    }
+    
+    return `${hour.toString().padStart(2, '0')}:${minutes}`;
+  };
+
   const addReminder = () => {
     if (!newReminder.habitId) return;
     
@@ -66,82 +90,109 @@ export const HabitReminders = ({ habits }: HabitRemindersProps) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Reminders ({reminders.filter(r => r.enabled).length})
-          </CardTitle>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Reminder
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Reminder</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="habit">Select Habit</Label>
-                  <Select value={newReminder.habitId} onValueChange={(value) => setNewReminder(prev => ({ ...prev, habitId: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose a habit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {habits.map(habit => (
-                        <SelectItem key={habit.id} value={habit.id}>{habit.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="time">Reminder Time</Label>
-                  <Input
-                    id="time"
-                    type="time"
-                    value={newReminder.time}
-                    onChange={(e) => setNewReminder(prev => ({ ...prev, time: e.target.value }))}
-                  />
-                </div>
-                <Button onClick={addReminder} className="w-full">Add Reminder</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {reminders.length === 0 ? (
-          <p className="text-muted-foreground text-center py-4">No reminders set yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {reminders.map(reminder => (
-              <div key={reminder.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleReminder(reminder.id)}
-                    className={reminder.enabled ? 'text-green-600' : 'text-gray-400'}
-                  >
-                    <Bell className="h-4 w-4" />
-                  </Button>
-                  <div>
-                    <p className="font-medium">{reminder.habitName}</p>
-                    <p className="text-sm text-muted-foreground">{reminder.time}</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => deleteReminder(reminder.id)}>
-                  <X className="h-4 w-4" />
+    <div className="space-y-6">
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+              Reminders ({reminders.filter(r => r.enabled).length} active)
+            </CardTitle>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Reminder
                 </Button>
-              </div>
-            ))}
+              </DialogTrigger>
+              <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add Reminder</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="habit">Select Habit</Label>
+                    <Select value={newReminder.habitId} onValueChange={(value) => setNewReminder(prev => ({ ...prev, habitId: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a habit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {habits.map(habit => (
+                          <SelectItem key={habit.id} value={habit.id}>{habit.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="time">Reminder Time</Label>
+                    <Input
+                      id="time"
+                      type="time"
+                      value={newReminder.time}
+                      onChange={(e) => setNewReminder(prev => ({ ...prev, time: e.target.value }))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Selected time: {formatTime12Hour(newReminder.time)}
+                    </p>
+                  </div>
+                  <Button onClick={addReminder} className="w-full">Add Reminder</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-6">
+          {reminders.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">No reminders set yet.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Set up reminders to help you stay consistent with your habits!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reminders.map(reminder => (
+                <Card key={reminder.id} className={`transition-all ${reminder.enabled ? 'border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800' : 'border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700'}`}>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleReminder(reminder.id)}
+                          className={`h-8 w-8 p-0 ${reminder.enabled ? 'text-blue-600 hover:text-blue-700' : 'text-gray-400 hover:text-gray-600'}`}
+                        >
+                          <Bell className={`h-4 w-4 ${reminder.enabled ? 'fill-current' : ''}`} />
+                        </Button>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm sm:text-base truncate">{reminder.habitName}</p>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
+                            <span className="font-mono text-blue-600 dark:text-blue-400">
+                              {formatTime12Hour(reminder.time)}
+                            </span>
+                            <span className="hidden sm:inline">•</span>
+                            <span className={reminder.enabled ? 'text-green-600' : 'text-gray-500'}>
+                              {reminder.enabled ? 'Active' : 'Disabled'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => deleteReminder(reminder.id)}
+                        className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };

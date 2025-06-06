@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Target, TrendingUp, Calendar, Trophy, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,12 +8,14 @@ import { AddHabitDialog } from '@/components/AddHabitDialog';
 import { StatsCard } from '@/components/StatsCard';
 import { HabitTemplates } from '@/components/HabitTemplates';
 import { ExportData } from '@/components/ExportData';
-import { AchievementBadges } from '@/components/AchievementBadges';
 import { Goals } from '@/components/Goals';
 import { HabitReminders } from '@/components/HabitReminders';
 import { HabitAnalytics } from '@/components/HabitAnalytics';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface HabitCompletion {
   date: string;
@@ -45,6 +46,9 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'all'>('pending');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
+  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [completionNote, setCompletionNote] = useState('');
 
   // Initialize today's date tracking and load habits
   useEffect(() => {
@@ -143,6 +147,11 @@ const Dashboard = () => {
     addHabit(template);
   };
 
+  const showHabitDetails = (habit: Habit) => {
+    setSelectedHabit(habit);
+    setIsDetailsDialogOpen(true);
+  };
+
   const toggleHabitCompletion = (habitId: string, note?: string) => {
     setHabits(prev => prev.map(habit => {
       if (habit.id === habitId) {
@@ -206,6 +215,11 @@ const Dashboard = () => {
       }
       return habit;
     }));
+  };
+
+  const handleCompleteWithNote = (habitId: string) => {
+    toggleHabitCompletion(habitId, completionNote);
+    setCompletionNote('');
   };
 
   // Calculate simplified statistics
@@ -283,12 +297,11 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Enhanced Features Tabs */}
+        {/* Enhanced Features Tabs - Removed Achievements */}
         <Tabs defaultValue="habits" className="mb-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="habits">Habits</TabsTrigger>
             <TabsTrigger value="goals">Goals</TabsTrigger>
-            <TabsTrigger value="achievements">Badges</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="reminders">Reminders</TabsTrigger>
             <TabsTrigger value="export">Export</TabsTrigger>
@@ -410,6 +423,14 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3">
+                          <Button 
+                            onClick={() => showHabitDetails(habit)}
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                          >
+                            Details
+                          </Button>
                           {!habit.completedToday && activeTab !== 'completed' && (
                             <Button 
                               onClick={() => toggleHabitCompletion(habit.id)}
@@ -432,11 +453,7 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="goals">
-            <Goals habits={habits} />
-          </TabsContent>
-
-          <TabsContent value="achievements">
-            <AchievementBadges habits={habits} />
+            <Goals habits={habits} onAddHabit={addHabit} />
           </TabsContent>
 
           <TabsContent value="analytics">
@@ -457,6 +474,80 @@ const Dashboard = () => {
           onOpenChange={setIsAddDialogOpen}
           onAddHabit={addHabit}
         />
+
+        {/* Habit Details Dialog */}
+        <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+          <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <span className="text-2xl">{selectedHabit?.icon}</span>
+                {selectedHabit?.name} Details
+              </DialogTitle>
+            </DialogHeader>
+            {selectedHabit && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <strong>Current Streak:</strong> {selectedHabit.streak} days
+                  </div>
+                  <div>
+                    <strong>Total Completed:</strong> {selectedHabit.completedDays}/{selectedHabit.totalDays}
+                  </div>
+                  <div>
+                    <strong>Success Rate:</strong> {Math.round((selectedHabit.completedDays / Math.max(selectedHabit.totalDays, 1)) * 100)}%
+                  </div>
+                  <div>
+                    <strong>Category:</strong> {selectedHabit.category}
+                  </div>
+                </div>
+                
+                {selectedHabit.description && (
+                  <div>
+                    <strong>Description:</strong>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{selectedHabit.description}</p>
+                  </div>
+                )}
+
+                <div>
+                  <strong>Recent Activity:</strong>
+                  <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
+                    {selectedHabit.completions?.slice(-10).reverse().map((completion, index) => (
+                      <div key={index} className="flex justify-between items-center text-sm p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                        <span>{new Date(completion.date).toLocaleDateString()}</span>
+                        <span className={completion.completed ? 'text-green-600' : 'text-gray-400'}>
+                          {completion.completed ? '✓ Completed' : '○ Pending'}
+                          {completion.completionTime && ` at ${completion.completionTime}`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {!selectedHabit.completedToday && (
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label htmlFor="completion-note">Add a note (optional):</Label>
+                    <Textarea
+                      id="completion-note"
+                      placeholder="How did it go? Any thoughts?"
+                      value={completionNote}
+                      onChange={(e) => setCompletionNote(e.target.value)}
+                      rows={3}
+                    />
+                    <Button 
+                      onClick={() => {
+                        handleCompleteWithNote(selectedHabit.id);
+                        setIsDetailsDialogOpen(false);
+                      }}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      Complete Habit
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
