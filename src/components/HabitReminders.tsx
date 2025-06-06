@@ -91,7 +91,7 @@ export const HabitReminders = ({ habits }: HabitRemindersProps) => {
 
   return (
     <div className="space-y-6">
-      <Card className="dark:bg-gray-800 dark:border-gray-700">
+      <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
@@ -130,6 +130,7 @@ export const HabitReminders = ({ habits }: HabitRemindersProps) => {
                       type="time"
                       value={newReminder.time}
                       onChange={(e) => setNewReminder(prev => ({ ...prev, time: e.target.value }))}
+                      className="w-full"
                     />
                     <p className="text-xs text-muted-foreground">
                       Selected time: {formatTime12Hour(newReminder.time)}
@@ -145,14 +146,14 @@ export const HabitReminders = ({ habits }: HabitRemindersProps) => {
           {reminders.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">No reminders set yet.</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 Set up reminders to help you stay consistent with your habits!
               </p>
             </div>
           ) : (
             <div className="space-y-3">
               {reminders.map(reminder => (
-                <Card key={reminder.id} className={`transition-all ${reminder.enabled ? 'border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800' : 'border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700'}`}>
+                <Card key={reminder.id} className={`transition-all border ${reminder.enabled ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800' : 'bg-muted border-border'}`}>
                   <CardContent className="p-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -160,18 +161,18 @@ export const HabitReminders = ({ habits }: HabitRemindersProps) => {
                           variant="ghost"
                           size="sm"
                           onClick={() => toggleReminder(reminder.id)}
-                          className={`h-8 w-8 p-0 ${reminder.enabled ? 'text-blue-600 hover:text-blue-700' : 'text-gray-400 hover:text-gray-600'}`}
+                          className={`h-8 w-8 p-0 ${reminder.enabled ? 'text-blue-600 hover:text-blue-700 dark:text-blue-400' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                           <Bell className={`h-4 w-4 ${reminder.enabled ? 'fill-current' : ''}`} />
                         </Button>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm sm:text-base truncate">{reminder.habitName}</p>
                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
-                            <span className="font-mono text-blue-600 dark:text-blue-400">
+                            <span className="font-mono text-blue-600 dark:text-blue-400 font-medium">
                               {formatTime12Hour(reminder.time)}
                             </span>
                             <span className="hidden sm:inline">•</span>
-                            <span className={reminder.enabled ? 'text-green-600' : 'text-gray-500'}>
+                            <span className={reminder.enabled ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}>
                               {reminder.enabled ? 'Active' : 'Disabled'}
                             </span>
                           </div>
@@ -181,7 +182,7 @@ export const HabitReminders = ({ habits }: HabitRemindersProps) => {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => deleteReminder(reminder.id)}
-                        className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20"
+                        className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                       >
                         <X className="h-4 w-4" />
                       </Button>

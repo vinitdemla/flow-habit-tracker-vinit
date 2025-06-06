@@ -238,55 +238,56 @@ const Analytics = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       <Header />
       
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Analytics</h1>
+      <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold">Analytics</h1>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-full sm:w-48 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-              <SelectItem value="weekly" className="dark:text-gray-100 dark:hover:bg-gray-700">Weekly View</SelectItem>
-              <SelectItem value="monthly" className="dark:text-gray-100 dark:hover:bg-gray-700">Monthly View</SelectItem>
-              <SelectItem value="yearly" className="dark:text-gray-100 dark:hover:bg-gray-700">Yearly View</SelectItem>
+            <SelectContent>
+              <SelectItem value="weekly">Weekly View</SelectItem>
+              <SelectItem value="monthly">Monthly View</SelectItem>
+              <SelectItem value="yearly">Yearly View</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <div className="w-full overflow-x-auto">
-            <TabsList className="grid w-full min-w-fit grid-cols-4 dark:bg-gray-800">
-              <TabsTrigger value="overview" className="px-3 py-2 text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Overview</TabsTrigger>
-              <TabsTrigger value="patterns" className="px-3 py-2 text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Patterns</TabsTrigger>
-              <TabsTrigger value="achievements" className="px-3 py-2 text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Achievements</TabsTrigger>
-              <TabsTrigger value="export" className="px-3 py-2 text-sm dark:text-gray-100 dark:data-[state=active]:bg-gray-700">Export</TabsTrigger>
+          <div className="w-full overflow-x-auto pb-2">
+            <TabsList className="grid w-full min-w-[400px] grid-cols-4 bg-muted">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2">Overview</TabsTrigger>
+              <TabsTrigger value="patterns" className="text-xs sm:text-sm px-2 py-2">Patterns</TabsTrigger>
+              <TabsTrigger value="achievements" className="text-xs sm:text-sm px-2 py-2">Achievements</TabsTrigger>
+              <TabsTrigger value="export" className="text-xs sm:text-sm px-2 py-2">Export</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg dark:text-gray-100">Completion Rate Trend</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Completion Rate Trend</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="w-full h-72">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="w-full h-64 sm:h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <ChartContainer config={chartConfig}>
-                        <LineChart data={timeRange === 'monthly' ? monthlyData : completionRateData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                        <LineChart data={timeRange === 'monthly' ? monthlyData : completionRateData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                           <XAxis 
                             dataKey={timeRange === 'monthly' ? 'month' : 'week'}
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                            tick={{ fontSize: 11 }}
+                            interval="preserveStartEnd"
                           />
                           <YAxis 
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                            tick={{ fontSize: 11 }}
                             domain={[0, timeRange === 'monthly' ? 'dataMax' : 100]}
                             tickFormatter={(value) => timeRange === 'monthly' ? value.toString() : `${value}%`}
                           />
@@ -294,8 +295,8 @@ const Analytics = () => {
                           <Line 
                             dataKey={timeRange === 'monthly' ? 'completions' : 'rate'}
                             stroke="#3B82F6" 
-                            strokeWidth={3}
-                            dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                            strokeWidth={2}
+                            dot={{ fill: '#3B82F6', strokeWidth: 2, r: 3 }}
                             type="monotone"
                           />
                         </LineChart>
@@ -305,22 +306,24 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg dark:text-gray-100">Habit Categories</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Habit Categories</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="w-full h-72">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="w-full h-64 sm:h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <ChartContainer config={chartConfig}>
-                        <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                        <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                           <Pie
                             data={categoryData}
                             cx="50%"
                             cy="50%"
-                            outerRadius="80%"
+                            outerRadius="70%"
                             dataKey="value"
                             label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            labelLine={false}
+                            fontSize={10}
                           >
                             {categoryData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -339,26 +342,30 @@ const Analytics = () => {
           </TabsContent>
 
           <TabsContent value="patterns" className="space-y-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg dark:text-gray-100">Completions by Time of Day</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Completions by Time of Day</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="w-full h-72">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="w-full h-64 sm:h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <ChartContainer config={chartConfig}>
-                        <BarChart data={timeOfDayData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                        <BarChart data={timeOfDayData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                           <XAxis 
                             dataKey="time" 
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                            tick={{ fontSize: 11 }}
+                            interval={0}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
                           />
                           <YAxis 
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                            tick={{ fontSize: 11 }}
                             domain={[0, 'dataMax']}
                             tickFormatter={(value) => Math.round(value).toString()}
                           />
@@ -366,8 +373,8 @@ const Analytics = () => {
                           <Bar 
                             dataKey="completions" 
                             fill="#3B82F6" 
-                            radius={[4, 4, 0, 0]}
-                            maxBarSize={50}
+                            radius={[2, 2, 0, 0]}
+                            maxBarSize={40}
                           />
                         </BarChart>
                       </ChartContainer>
@@ -376,25 +383,25 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg dark:text-gray-100">Weekly Completion Pattern</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Weekly Completion Pattern</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="w-full h-72">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="w-full h-64 sm:h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <ChartContainer config={chartConfig}>
-                        <BarChart data={weeklyData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                        <BarChart data={weeklyData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                           <XAxis 
                             dataKey="day" 
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                            tick={{ fontSize: 11 }}
                           />
                           <YAxis 
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                            tick={{ fontSize: 11 }}
                             domain={[0, 'dataMax']}
                             tickFormatter={(value) => Math.round(value).toString()}
                           />
@@ -402,8 +409,8 @@ const Analytics = () => {
                           <Bar 
                             dataKey="completions" 
                             fill="#10B981" 
-                            radius={[4, 4, 0, 0]}
-                            maxBarSize={60}
+                            radius={[2, 2, 0, 0]}
+                            maxBarSize={50}
                           />
                         </BarChart>
                       </ChartContainer>
