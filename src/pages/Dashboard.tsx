@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus, Flame, Check, Target, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,10 +9,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { HabitCard } from '@/components/HabitCard';
 import { HabitReminders } from '@/components/HabitReminders';
 import { Goals } from '@/components/Goals';
-import { HabitAnalytics } from '@/components/HabitAnalytics';
-import { HeatmapModal } from '@/components/HeatmapModal';
 import { Header } from '@/components/Header';
-import { Progress } from '@/components/ui/progress';
 
 interface HabitCompletion {
   date: string;
@@ -62,13 +60,13 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon, className }) 
   }
 
   return (
-    <Card className={`flex flex-col justify-between p-4 rounded-lg ${className}`}>
+    <Card className={`flex flex-col justify-between p-3 sm:p-4 rounded-lg ${className}`}>
       <div>
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <CardTitle className="text-xs sm:text-sm font-medium">{title}</CardTitle>
       </div>
-      <div className="flex items-center justify-between mt-4">
-        <div className="text-2xl font-bold">{value}</div>
-        <IconComponent className="w-6 h-6 text-gray-500" />
+      <div className="flex items-center justify-between mt-3 sm:mt-4">
+        <div className="text-xl sm:text-2xl font-bold">{value}</div>
+        <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
       </div>
     </Card>
   );
@@ -79,6 +77,7 @@ const Dashboard = () => {
     const storedHabits = localStorage.getItem('habits');
     return storedHabits ? JSON.parse(storedHabits) : [];
   });
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
     const storedHabits = localStorage.getItem('habits');
@@ -127,6 +126,7 @@ const Dashboard = () => {
       ...newHabit
     };
     setHabits([...habits, habit]);
+    setIsAddDialogOpen(false);
   };
 
   const toggleHabitComplete = (id: string) => {
@@ -205,27 +205,30 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background text-foreground">
       <Header />
       
-      <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Dashboard</h1>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <AddHabitDialog onAddHabit={addHabit} />
+            <AddHabitDialog 
+              onAddHabit={addHabit}
+              open={isAddDialogOpen}
+              onOpenChange={setIsAddDialogOpen}
+            />
             <ThemeToggle />
           </div>
         </div>
 
-        <Tabs defaultValue="habits" className="space-y-6">
+        <Tabs defaultValue="habits" className="space-y-4 sm:space-y-6">
           <div className="w-full overflow-x-auto pb-2">
-            <TabsList className="grid w-full min-w-[400px] grid-cols-4 bg-muted">
+            <TabsList className="grid w-full min-w-[300px] grid-cols-3 bg-muted">
               <TabsTrigger value="habits" className="text-xs sm:text-sm px-2 py-2">Your Habits</TabsTrigger>
               <TabsTrigger value="reminders" className="text-xs sm:text-sm px-2 py-2">Reminders</TabsTrigger>
               <TabsTrigger value="goals" className="text-xs sm:text-sm px-2 py-2">Goals</TabsTrigger>
-              <TabsTrigger value="stats" className="text-xs sm:text-sm px-2 py-2">Statistics</TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="habits" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <TabsContent value="habits" className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <StatsCard 
                 title="Total Habits" 
                 value={habits.length} 
@@ -253,19 +256,23 @@ const Dashboard = () => {
             </div>
 
             {habits.length === 0 ? (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <p className="text-muted-foreground mb-4">No habits yet. Start building better habits today!</p>
-                  <AddHabitDialog onAddHabit={addHabit} />
+              <Card className="text-center py-8 sm:py-12">
+                <CardContent className="px-4 sm:px-6">
+                  <p className="text-muted-foreground mb-4 text-sm sm:text-base">No habits yet. Start building better habits today!</p>
+                  <AddHabitDialog 
+                    onAddHabit={addHabit}
+                    open={isAddDialogOpen}
+                    onOpenChange={setIsAddDialogOpen}
+                  />
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {habits.map(habit => (
                   <HabitCard
                     key={habit.id}
                     habit={habit}
-                    onToggleComplete={toggleHabitComplete}
+                    onToggle={toggleHabitComplete}
                     onEdit={editHabit}
                     onDelete={deleteHabit}
                     onAddNote={addCompletionNote}
@@ -280,14 +287,7 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="goals">
-            <Goals habits={habits} />
-          </TabsContent>
-
-          <TabsContent value="stats">
-            <div className="space-y-6">
-              <HabitAnalytics habits={habits} />
-              <HeatmapModal habits={habits} />
-            </div>
+            <Goals habits={habits} onAddHabit={addHabit} />
           </TabsContent>
         </Tabs>
       </div>
