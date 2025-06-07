@@ -209,11 +209,13 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Dashboard</h1>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <AddHabitDialog 
-              onAddHabit={addHabit}
-              open={isAddDialogOpen}
-              onOpenChange={setIsAddDialogOpen}
-            />
+            <Button 
+              onClick={() => setIsAddDialogOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Habit
+            </Button>
             <ThemeToggle />
           </div>
         </div>
@@ -259,11 +261,13 @@ const Dashboard = () => {
               <Card className="text-center py-8 sm:py-12">
                 <CardContent className="px-4 sm:px-6">
                   <p className="text-muted-foreground mb-4 text-sm sm:text-base">No habits yet. Start building better habits today!</p>
-                  <AddHabitDialog 
-                    onAddHabit={addHabit}
-                    open={isAddDialogOpen}
-                    onOpenChange={setIsAddDialogOpen}
-                  />
+                  <Button 
+                    onClick={() => setIsAddDialogOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Habit
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
@@ -290,6 +294,12 @@ const Dashboard = () => {
             <Goals habits={habits} onAddHabit={addHabit} />
           </TabsContent>
         </Tabs>
+
+        <AddHabitDialog 
+          onAddHabit={addHabit}
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+        />
       </div>
     </div>
   );

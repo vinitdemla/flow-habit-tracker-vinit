@@ -50,7 +50,7 @@ export const Goals = ({ habits, onAddHabit }: GoalsProps) => {
     targetValue: 0,
     unit: 'days',
     deadline: '',
-    habitId: '',
+    habitId: 'none',
     category: 'Health'
   });
 
@@ -203,7 +203,7 @@ export const Goals = ({ habits, onAddHabit }: GoalsProps) => {
                           <SelectValue placeholder="Choose a habit" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No habit linked</SelectItem>
+                          <SelectItem value="none">No habit linked</SelectItem>
                           {habits.map(habit => (
                             <SelectItem key={habit.id} value={habit.id}>{habit.name}</SelectItem>
                           ))}
@@ -215,11 +215,15 @@ export const Goals = ({ habits, onAddHabit }: GoalsProps) => {
                 </DialogContent>
               </Dialog>
               {habits.length === 0 && onAddHabit && (
-                <AddHabitDialog 
-                  onAddHabit={onAddHabit}
-                  open={isHabitDialogOpen}
-                  onOpenChange={setIsHabitDialogOpen}
-                />
+                <Button 
+                  onClick={() => setIsHabitDialogOpen(true)}
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full sm:w-auto"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Habit
+                </Button>
               )}
             </div>
           </div>
@@ -237,11 +241,13 @@ export const Goals = ({ habits, onAddHabit }: GoalsProps) => {
                   <p className="text-xs text-muted-foreground">
                     Start by creating your first habit:
                   </p>
-                  <AddHabitDialog 
-                    onAddHabit={onAddHabit}
-                    open={isHabitDialogOpen}
-                    onOpenChange={setIsHabitDialogOpen}
-                  />
+                  <Button 
+                    onClick={() => setIsHabitDialogOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Habit
+                  </Button>
                 </div>
               )}
             </div>
@@ -250,7 +256,7 @@ export const Goals = ({ habits, onAddHabit }: GoalsProps) => {
               {goals.map(goal => {
                 const progress = getGoalProgress(goal);
                 const daysLeft = goal.deadline ? getDaysUntilDeadline(goal.deadline) : null;
-                const linkedHabit = goal.habitId ? habits.find(h => h.id === goal.habitId) : null;
+                const linkedHabit = goal.habitId && goal.habitId !== 'none' ? habits.find(h => h.id === goal.habitId) : null;
                 
                 return (
                   <Card key={goal.id} className={`transition-all border ${goal.completed ? 'bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800' : 'bg-card border-border'}`}>
@@ -352,6 +358,14 @@ export const Goals = ({ habits, onAddHabit }: GoalsProps) => {
           )}
         </CardContent>
       </Card>
+
+      {(isHabitDialogOpen && onAddHabit) && (
+        <AddHabitDialog 
+          onAddHabit={onAddHabit}
+          open={isHabitDialogOpen}
+          onOpenChange={setIsHabitDialogOpen}
+        />
+      )}
     </div>
   );
 };
