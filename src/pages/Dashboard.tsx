@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus, Flame, Check, Target, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,8 +9,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { HabitCard } from '@/components/HabitCard';
 import { HabitReminders } from '@/components/HabitReminders';
 import { Goals } from '@/components/Goals';
-import { HabitAnalytics } from '@/components/HabitAnalytics';
-import { HeatmapModal } from '@/components/HeatmapModal';
+import { HeatmapContainer } from '@/components/HeatmapContainer';
 import { Header } from '@/components/Header';
 import { Progress } from '@/components/ui/progress';
 
@@ -220,7 +220,7 @@ const Dashboard = () => {
               <TabsTrigger value="habits" className="text-xs sm:text-sm px-2 py-2">Your Habits</TabsTrigger>
               <TabsTrigger value="reminders" className="text-xs sm:text-sm px-2 py-2">Reminders</TabsTrigger>
               <TabsTrigger value="goals" className="text-xs sm:text-sm px-2 py-2">Goals</TabsTrigger>
-              <TabsTrigger value="stats" className="text-xs sm:text-sm px-2 py-2">Statistics</TabsTrigger>
+              <TabsTrigger value="heatmap" className="text-xs sm:text-sm px-2 py-2">Heatmap</TabsTrigger>
             </TabsList>
           </div>
 
@@ -283,11 +283,8 @@ const Dashboard = () => {
             <Goals habits={habits} />
           </TabsContent>
 
-          <TabsContent value="stats">
-            <div className="space-y-6">
-              <HabitAnalytics habits={habits} />
-              <HeatmapModal habits={habits} />
-            </div>
+          <TabsContent value="heatmap">
+            <HeatmapContainer habits={habits} />
           </TabsContent>
         </Tabs>
       </div>

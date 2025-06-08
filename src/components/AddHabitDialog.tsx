@@ -1,16 +1,15 @@
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Plus } from 'lucide-react';
 
 interface AddHabitDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   onAddHabit: (habit: {
     name: string;
     description: string;
@@ -22,7 +21,8 @@ interface AddHabitDialogProps {
   }) => void;
 }
 
-export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialogProps) => {
+export const AddHabitDialog = ({ onAddHabit }: AddHabitDialogProps) => {
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -50,7 +50,7 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
         frequency: 'daily',
         customDays: []
       });
-      onOpenChange(false);
+      setOpen(false);
     }
   };
 
@@ -64,7 +64,13 @@ export const AddHabitDialog = ({ open, onOpenChange, onAddHabit }: AddHabitDialo
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add Habit
+        </Button>
+      </DialogTrigger>
       <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto mx-auto my-4">
         <DialogHeader>
           <DialogTitle>Add New Habit</DialogTitle>
