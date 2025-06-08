@@ -1,18 +1,12 @@
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { CheckCircle, User } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [showNameDialog, setShowNameDialog] = useState(false);
-  const [userName, setUserName] = useState('');
 
   const features = [
     {
@@ -41,29 +35,6 @@ const Landing = () => {
     }
   ];
 
-  const handleGetStarted = () => {
-    const existingUser = localStorage.getItem('userName');
-    if (existingUser) {
-      navigate('/dashboard');
-    } else {
-      setShowNameDialog(true);
-    }
-  };
-
-  const handleNameSubmit = () => {
-    if (userName.trim()) {
-      localStorage.setItem('userName', userName.trim());
-      setShowNameDialog(false);
-      navigate('/dashboard');
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleNameSubmit();
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
@@ -72,7 +43,7 @@ const Landing = () => {
           HabitRise
         </div>
         <Button 
-          onClick={handleGetStarted}
+          onClick={() => navigate('/dashboard')}
           className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
         >
           Get Started
@@ -99,7 +70,7 @@ const Landing = () => {
 
         <Button 
           size="lg" 
-          onClick={handleGetStarted}
+          onClick={() => navigate('/dashboard')}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg dark:bg-blue-600 dark:hover:bg-blue-700"
         >
           Get Started →
@@ -135,45 +106,6 @@ const Landing = () => {
         <span className="text-blue-600 dark:text-blue-400">supabase</span> and{' '}
         <span className="text-blue-600 dark:text-blue-400">lovable</span>
       </footer>
-
-      {/* Name Input Dialog */}
-      <Dialog open={showNameDialog} onOpenChange={setShowNameDialog}>
-        <DialogContent className="max-w-md w-[95vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <User className="h-5 w-5 sm:h-6 sm:w-6" />
-              Welcome to HabitRise!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <div className="text-center">
-              <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-                Let's personalize your experience. What should we call you?
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm">Your Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Enter your name"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="w-full"
-                autoFocus
-              />
-            </div>
-            <Button 
-              onClick={handleNameSubmit} 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={!userName.trim()}
-            >
-              Continue to Dashboard
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

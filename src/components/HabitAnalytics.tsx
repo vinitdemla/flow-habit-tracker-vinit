@@ -93,98 +93,56 @@ export const HabitAnalytics = ({ habits }: HabitAnalyticsProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-          <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />
+        <CardTitle className="flex items-center gap-2">
+          <TrendingUp className="h-5 w-5" />
           Analytics & Trends
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 sm:p-6">
+      <CardContent>
         <Tabs defaultValue="weekly" className="w-full">
-          <div className="w-full overflow-x-auto pb-2">
-            <TabsList className="grid w-full min-w-[300px] grid-cols-3">
-              <TabsTrigger value="weekly" className="text-xs sm:text-sm">Weekly</TabsTrigger>
-              <TabsTrigger value="monthly" className="text-xs sm:text-sm">Monthly</TabsTrigger>
-              <TabsTrigger value="performance" className="text-xs sm:text-sm">Performance</TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="weekly">Weekly</TabsTrigger>
+            <TabsTrigger value="monthly">Monthly</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+          </TabsList>
 
           <TabsContent value="weekly" className="space-y-4">
-            <div className="h-48 sm:h-64">
+            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={weeklyData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="week" 
-                    tick={{ fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px'
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="completions" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
-                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 3 }}
-                  />
+                <LineChart data={weeklyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="week" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="completions" stroke="#3b82f6" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-                <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">
                   {weeklyData[weeklyData.length - 1]?.completions || 0}
                 </div>
-                <div className="text-xs sm:text-sm text-muted-foreground">This Week</div>
+                <div className="text-sm text-muted-foreground">This Week</div>
               </div>
-              <div className="text-center p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
-                <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
                   {Math.round(weeklyData.reduce((sum, week) => sum + week.completions, 0) / weeklyData.length)}
                 </div>
-                <div className="text-xs sm:text-sm text-muted-foreground">Avg. per Week</div>
+                <div className="text-sm text-muted-foreground">Avg. per Week</div>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="monthly" className="space-y-4">
-            <div className="h-48 sm:h-64">
+            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="month" 
-                    tick={{ fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px'
-                    }}
-                  />
-                  <Bar 
-                    dataKey="completions" 
-                    fill="hsl(var(--primary))" 
-                    radius={[2, 2, 0, 0]}
-                  />
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="completions" fill="#10b981" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -192,26 +150,20 @@ export const HabitAnalytics = ({ habits }: HabitAnalyticsProps) => {
 
           <TabsContent value="performance" className="space-y-4">
             <div className="space-y-3">
-              {habitPerformance.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">No habit data available yet.</p>
-                </div>
-              ) : (
-                habitPerformance.map((habit, index) => (
-                  <div key={habit.name} className="flex items-center justify-between p-3 border rounded-lg bg-card">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-blue-100 dark:bg-blue-950/30 rounded-full flex items-center justify-center text-xs font-bold">
-                        {index + 1}
-                      </div>
-                      <span className="font-medium text-sm sm:text-base truncate">{habit.name}</span>
+              {habitPerformance.map((habit, index) => (
+                <div key={habit.name} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold">
+                      {index + 1}
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-sm sm:text-base">{habit.completions} completions</div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">{habit.rate}% rate</div>
-                    </div>
+                    <span className="font-medium">{habit.name}</span>
                   </div>
-                ))
-              )}
+                  <div className="text-right">
+                    <div className="font-bold">{habit.completions} completions</div>
+                    <div className="text-sm text-muted-foreground">{habit.rate}% rate</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </TabsContent>
         </Tabs>
